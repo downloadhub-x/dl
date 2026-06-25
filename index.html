@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เข้าสู่ระบบ | Premium Access</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .login-container {
+            background: rgba(25, 25, 25, 0.85);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 15px rgba(212, 175, 55, 0.1);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            width: 100%;
+            max-width: 400px;
+            backdrop-filter: blur(10px);
+            text-align: center;
+        }
+
+        .login-container h2 {
+            color: #d4af37; /* Gold */
+            font-size: 2rem;
+            margin-bottom: 25px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            color: #baa055;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px 15px;
+            background: #222;
+            border: 1px solid #444;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input:focus {
+            border-color: #d4af37;
+            outline: none;
+            box-shadow: 0 0 8px rgba(212, 175, 55, 0.4);
+            background: #2a2a2a;
+        }
+
+        /* ลูกเล่นปุ่มกด Login */
+        .btn-login {
+            width: 100%;
+            padding: 13px;
+            background: linear-gradient(45deg, #af8f2c, #f3e09b, #d4af37);
+            background-size: 200% auto;
+            border: none;
+            border-radius: 8px;
+            color: #111;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-login:hover {
+            background-position: right center; /* เลื่อนสี Gradient */
+            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .btn-login:active {
+            transform: translateY(1px);
+            box-shadow: 0 3px 10px rgba(212, 175, 55, 0.4);
+        }
+
+        /* ข้อความแจ้งเตือนเมื่อรหัสผิด */
+        .error-msg {
+            color: #ff4d4d;
+            font-size: 0.9rem;
+            margin-top: 15px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        <h2>Sign In</h2>
+        <form id="loginForm">
+            <div class="input-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" placeholder="ระบุชื่อผู้ใช้" required>
+            </div>
+            <div class="input-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="ระบุรหัสผ่าน" required>
+            </div>
+            <button type="submit" class="btn-login">LOG IN</button>
+            <div class="error-msg" id="errorMsg">Username หรือ Password ไม่ถูกต้อง!</div>
+        </form>
+    </div>
+
+    <script>
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const user = document.getElementById('username').value;
+        const pass = document.getElementById('password').value;
+        const errorMsg = document.getElementById('errorMsg');
+
+        // ตรวจสอบเงื่อนไข Username และ Password
+        if (user === 'Thanpisit' && pass === 'Wongjaisak') {
+            errorMsg.style.display = 'none';
+            
+            // 🔥 เพิ่มคำสั่งนี้: บันทึกสถานะการ Login ไว้ใน sessionStorage (จะหายไปเมื่อปิดแท็บ/เบราว์เซอร์)
+            sessionStorage.setItem('isLoggedIn', 'true');
+            sessionStorage.setItem('currentUser', user); // บันทึกชื่อไว้ไปแสดงหน้าสองได้ด้วย
+
+            // ส่งไปยังหน้า dashboard.html
+            window.location.href = 'dashboard.html';
+        } else {
+            errorMsg.style.display = 'block';
+        }
+    });
+</script>
+</body>
+</html>

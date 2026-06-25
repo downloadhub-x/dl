@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Workspace Portal</title>
+    <style>
+        /* --- ตั้งค่าตัวแปรสำหรับระบบ Dark / Light Mode --- */
+        :root {
+            --bg-body: #0a0a0a;
+            --bg-sidebar: #111111;
+            --border-color: rgba(212, 175, 55, 0.15);
+            --text-main: #ffffff;
+            --text-sub: #aaaaaa;
+            --gold: #d4af37;
+            --shadow: rgba(212, 175, 55, 0.2);
+        }
+
+        [data-theme="light"] {
+            --bg-body: #f4f5f7;
+            --bg-sidebar: #ffffff;
+            --border-color: rgba(175, 143, 44, 0.3);
+            --text-main: #1a1a1a;
+            --text-sub: #555555;
+            --shadow: rgba(175, 143, 44, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
+        body {
+            background: var(--bg-body);
+            color: var(--text-main);
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* --- แถบเมนูด้านข้าง (Sidebar) --- */
+        .sidebar {
+            width: 260px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 30px 20px;
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+        }
+
+        .sidebar-brand h2 {
+            color: var(--gold);
+            font-size: 1.5rem;
+            letter-spacing: 1px;
+            text-align: center;
+            margin-bottom: 40px;
+            text-shadow: 0 0 10px var(--shadow);
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            flex-grow: 1;
+        }
+
+        /* ปรับสไตล์ปุ่มเมนูให้รองรับการกดลิงก์หน้าใหม่ */
+        .sidebar-link {
+            text-decoration: none;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .sidebar-item {
+            padding: 14px 18px;
+            color: var(--text-sub);
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-link:hover .sidebar-item, 
+        .sidebar-link.active .sidebar-item {
+            background: var(--gold);
+            color: #111;
+            box-shadow: 0 4px 12px var(--shadow);
+            transform: translateX(5px);
+        }
+
+        /* ปุ่มโหมด มืด/สว่าง */
+        .theme-toggle-btn {
+            background: transparent;
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle-btn:hover {
+            background: var(--gold);
+            color: #111;
+            box-shadow: 0 0 15px var(--shadow);
+        }
+
+        .btn-logout {
+            background: transparent;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            text-decoration: underline;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+        .btn-logout:hover { color: #ff4d4d; }
+
+        /* --- พื้นที่เนื้อหาหลัก (Welcome Screen) --- */
+        .main-content {
+            margin-left: 260px;
+            padding: 60px;
+            width: calc(100% - 260px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .welcome-box {
+            max-width: 600px;
+            padding: 40px;
+            background: linear-gradient(145deg, rgba(25,25,25,0.4), rgba(35,35,35,0.4));
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+        }
+
+        .welcome-box h1 {
+            color: var(--gold);
+            font-size: 2.5rem;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            text-shadow: 0 0 15px var(--shadow);
+        }
+
+        .welcome-box p {
+            color: var(--text-sub);
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="sidebar">
+        <div class="sidebar-brand">
+            <h2>PORTAL HUB</h2>
+        </div>
+        
+        <ul class="sidebar-menu">
+            <a href="dashboard.html" class="sidebar-link active">
+                <li class="sidebar-item">🏠 หน้าหลัก</li>
+            </a>
+            <a href="adobedl.html" class="sidebar-link">
+                <li class="sidebar-item">🎨 หมวดหมู่ Adobe</li>
+            </a>
+            <a href="gamesdl.html" class="sidebar-link">
+                <li class="sidebar-item">🎮 หมวดหมู่ Games</li>
+            </a>
+            <a href="etcdl.html" class="sidebar-link">
+                <li class="sidebar-item">📂 หมวดหมู่ ETC.</li>
+            </a>
+        </ul>
+
+        <div style="display: flex; flex-direction: column;">
+            <button class="theme-toggle-btn" onclick="toggleTheme()">
+                <span id="theme-icon">☀️</span> <span id="theme-text">Light Mode</span>
+            </button>
+            <button class="btn-logout" onclick="window.location.href='index.html'">ออกจากระบบ</button>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="welcome-box">
+            <h1>WELCOME BACK</h1>
+            <p>ยินดีต้อนรับคุณ <strong>Thanpisit</strong> เข้าสู่ระบบสเปซส่วนตัวเรียบร้อยแล้ว โปรดคลิกเลือกหมวดหมู่เมนูที่แถบด้านข้างซ้าย เพื่อไปยังคลังไฟล์หรือทางลัดที่คุณต้องการใช้งานได้ทันที</p>
+        </div>
+    </main>
+
+    <script>
+        // ฟังก์ชัน สลับโหมดมืด / สว่าง (Dark & Light Mode Toggle)
+        function toggleTheme() {
+            const currentTheme = document.body.getAttribute('data-theme');
+            const themeIcon = document.getElementById('theme-icon');
+            const themeText = document.getElementById('theme-text');
+
+            if (currentTheme === 'light') {
+                document.body.removeAttribute('data-theme');
+                themeIcon.innerText = '☀️';
+                themeText.innerText = 'Light Mode';
+            } else {
+                document.body.setAttribute('data-theme', 'light');
+                themeIcon.innerText = '🌙';
+                themeText.innerText = 'Dark Mode';
+            }
+        }
+    </script>
+</body>
+</html>
