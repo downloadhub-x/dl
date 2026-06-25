@@ -90,16 +90,12 @@
         <a href="dashboard.html" class="btn-back">⬅️ กลับไปหน้าหลัก Dashboard</a>
     </div>
 
-    <script type="module">
-        // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+        <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
+        // 🔥 เอา Config จริงของคุณมาวางตรงนี้ให้ถูกต้องและครบถ้วน
+        const firebaseConfig = {
   apiKey: "AIzaSyB-v9u49UfZ0CBt8bYQoFMCB6QuqLxspZk",
   authDomain: "download-hub-e940e.firebaseapp.com",
   databaseURL: "https://download-hub-e940e-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -110,15 +106,12 @@ const firebaseConfig = {
   measurementId: "G-46FQ8MGH9B"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
-        // ผูกฟังก์ชันเข้ากับ window เพื่อแก้ปัญหา Scope ของโค้ดแบบ Module พังหน้าบ้าน
         window.saveDataToFirebase = async function(e) {
             e.preventDefault();
             
-            // 🚨 แจ้งเตือนด่านแรกเพื่อเช็กว่าปุ่มตอบสนองหรือไม่
             alert("ระบบกำลังเตรียมส่งข้อมูลไปที่ Firebase..."); 
 
             const newItem = {
@@ -133,16 +126,26 @@ const analytics = getAnalytics(app);
                 btnText: document.getElementById('btnText').value.trim()
             };
 
+            // 💡 สร้างระบบ Promise Race ดักจับอาการค้างเกิน 5 วินาที
+            const timeoutPromise = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error("⚠️ เชื่อมต่อ Firebase ไม่สำเร็จ (Timeout) ตรวจสอบ Config ด่วน!")), 5000)
+            );
+
             try {
-                // ส่งข้อมูลเข้าเซิร์ฟเวอร์คลาวด์
-                await addDoc(collection(db, "portalItems"), newItem);
+                // วิ่งแข่งกันระหว่างส่งข้อมูล กับเวลา 5 วินาที ถ้าอย่างไหนเสร็จก่อนให้ทำงานอันนั้น
+                await Promise.race([
+                    addDoc(collection(db, "portalItems"), newItem),
+                    timeoutPromise
+                ]);
+                
                 alert('🚀 อัปโหลดข้อมูลลงคลาวด์ Firebase Database สำเร็จเรียบร้อยครับ!');
-                e.target.reset(); // ล้างฟอร์ม
+                e.target.reset(); 
             } catch (error) {
-                console.error("Firebase Error: ", error);
-                alert('Firebase ปฏิเสธการบันทึกข้อมูล: ' + error.message);
+                console.error("Error Detail: ", error);
+                alert(error.message); // จะเด้งเตือนบอกทันทีถ้าค้าง
             }
         }
     </script>
+
 </body>
 </html>
