@@ -90,11 +90,11 @@
         <a href="dashboard.html" class="btn-back">⬅️ กลับไปหน้าหลัก Dashboard</a>
     </div>
 
-        <script type="module">
+            <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // 🔥 เอา Config จริงของคุณมาวางตรงนี้ให้ถูกต้องและครบถ้วน
+        // ⚠️ ขั้นตอนสำคัญ: วางคีย์โปรเจกต์ใหม่ของคุณตรงนี้ให้ครบถ้วนนะครับ
         const firebaseConfig = {
   apiKey: "AIzaSyB-v9u49UfZ0CBt8bYQoFMCB6QuqLxspZk",
   authDomain: "download-hub-e940e.firebaseapp.com",
@@ -106,46 +106,42 @@
   measurementId: "G-46FQ8MGH9B"
 };
 
+        // เริ่มต้นระบบเชื่อมต่อ
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
+        // ผูกฟังก์ชันเข้ากับ window เพื่อให้ฟอร์มด้านบนมองเห็น
         window.saveDataToFirebase = async function(e) {
-            e.preventDefault();
+            e.preventDefault(); // สั่งเบราว์เซอร์ห้ามรีเฟรชหน้าเว็บเองเด็ดขาด
             
             alert("ระบบกำลังเตรียมส่งข้อมูลไปที่ Firebase..."); 
 
-            const newItem = {
-                createdAt: Date.now(),
-                category: document.getElementById('category').value,
-                title: document.getElementById('title').value.trim(),
-                dotClass: document.getElementById('dotClass').value,
-                details: document.getElementById('details').value.trim(),
-                accountInfo: document.getElementById('accountInfo').value.trim(),
-                imgUrl: document.getElementById('imgUrl').value.trim(),
-                downloadUrl: document.getElementById('downloadUrl').value.trim(),
-                btnText: document.getElementById('btnText').value.trim()
-            };
-
-            // 💡 สร้างระบบ Promise Race ดักจับอาการค้างเกิน 5 วินาที
-            const timeoutPromise = new Promise((_, reject) => 
-                setTimeout(() => reject(new Error("⚠️ เชื่อมต่อ Firebase ไม่สำเร็จ (Timeout) ตรวจสอบ Config ด่วน!")), 5000)
-            );
-
             try {
-                // วิ่งแข่งกันระหว่างส่งข้อมูล กับเวลา 5 วินาที ถ้าอย่างไหนเสร็จก่อนให้ทำงานอันนั้น
-                await Promise.race([
-                    addDoc(collection(db, "portalItems"), newItem),
-                    timeoutPromise
-                ]);
+                const newItem = {
+                    createdAt: Date.now(),
+                    category: document.getElementById('category').value,
+                    title: document.getElementById('title').value.trim(),
+                    dotClass: document.getElementById('dotClass').value,
+                    details: document.getElementById('details').value.trim(),
+                    accountInfo: document.getElementById('accountInfo').value.trim(),
+                    imgUrl: document.getElementById('imgUrl').value.trim(),
+                    downloadUrl: document.getElementById('downloadUrl').value.trim(),
+                    btnText: document.getElementById('btnText').value.trim()
+                };
+
+                // ส่งข้อมูลเข้า Collection บนฐานข้อมูลใหม่
+                await addDoc(collection(db, "portalItems"), newItem);
                 
                 alert('🚀 อัปโหลดข้อมูลลงคลาวด์ Firebase Database สำเร็จเรียบร้อยครับ!');
-                e.target.reset(); 
+                e.target.reset(); // เมื่อสำเร็จจริงค่อยล้างข้อมูลในฟอร์มออก
+                
             } catch (error) {
-                console.error("Error Detail: ", error);
-                alert(error.message); // จะเด้งเตือนบอกทันทีถ้าค้าง
+                console.error("Firebase Connect Error: ", error);
+                alert('❌ เกิดข้อผิดพลาดฝั่ง Firebase: ' + error.message);
             }
         }
     </script>
+
 
 </body>
 </html>
