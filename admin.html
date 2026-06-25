@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel | Workspace Portal</title>
     <script>
-        // ป้องกันความปลอดภัยขั้นแรกที่หน้าบ้าน
         if (sessionStorage.getItem('isLoggedIn') !== 'true' || sessionStorage.getItem('role') !== 'admin') {
             alert('พื้นที่นี้เฉพาะผู้ดูแลระบบเท่านั้นครับ!');
             window.location.href = 'dashboard.html';
@@ -31,7 +30,8 @@
 
     <div class="admin-container">
         <h1>⚙️ CONTROL & UPLOAD PANEL</h1>
-        <form id="uploadForm">
+        
+        <form onsubmit="saveDataToFirebase(event)">
             <div class="form-row">
                 <div class="form-group">
                     <label>เลือกหมวดหมู่หน้าเว็บ (Category)</label>
@@ -94,8 +94,10 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // 🔥 เอา Firebase Config ของคุณมาวางตรงนี้ให้ถูกต้องเหมือนทุกๆ หน้าครับ
-        const firebaseConfig = {
+        // 🔥 ตรวจสอบให้มั่นใจว่าคัดลอกก้อน Config จาก Firebase Console มาวางตรงนี้ครบถ้วน
+        
+
+const firebaseConfig = {
   apiKey: "AIzaSyB-v9u49UfZ0CBt8bYQoFMCB6QuqLxspZk",
   authDomain: "download-hub-e940e.firebaseapp.com",
   databaseURL: "https://download-hub-e940e-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -106,37 +108,38 @@
   measurementId: "G-TWQJELXBWM"
 };
 
+        // เริ่มต้นเชื่อมต่อฐานข้อมูล
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // ดักจับการทำงานเมื่อฟอร์มกด Submit
-        const form = document.getElementById('uploadForm');
-        if (form) {
-            form.addEventListener('submit', async function(e) {
-                e.preventDefault();
+        // ผูกฟังก์ชันเข้ากับ window เพื่อแก้ปัญหา Scope ของโค้ดแบบ Module พังหน้าบ้าน
+        window.saveDataToFirebase = async function(e) {
+            e.preventDefault();
+            
+            // 🚨 แจ้งเตือนด่านแรกเพื่อเช็กว่าปุ่มตอบสนองหรือไม่
+            alert("ระบบกำลังเตรียมส่งข้อมูลไปที่ Firebase..."); 
 
-                const newItem = {
-                    createdAt: Date.now(), // ใช้สำหรับดึงมาจัดเรียงลำดับก่อนหลัง
-                    category: document.getElementById('category').value,
-                    title: document.getElementById('title').value.trim(),
-                    dotClass: document.getElementById('dotClass').value,
-                    details: document.getElementById('details').value.trim(),
-                    accountInfo: document.getElementById('accountInfo').value.trim(),
-                    imgUrl: document.getElementById('imgUrl').value.trim(),
-                    downloadUrl: document.getElementById('downloadUrl').value.trim(),
-                    btnText: document.getElementById('btnText').value.trim()
-                };
+            const newItem = {
+                createdAt: Date.now(),
+                category: document.getElementById('category').value,
+                title: document.getElementById('title').value.trim(),
+                dotClass: document.getElementById('dotClass').value,
+                details: document.getElementById('details').value.trim(),
+                accountInfo: document.getElementById('accountInfo').value.trim(),
+                imgUrl: document.getElementById('imgUrl').value.trim(),
+                downloadUrl: document.getElementById('downloadUrl').value.trim(),
+                btnText: document.getElementById('btnText').value.trim()
+            };
 
-                try {
-                    // ส่งขึ้นคอลเลกชันฐานข้อมูล Firebase ทันที
-                    await addDoc(collection(db, "portalItems"), newItem);
-                    alert('🚀 อัปโหลดข้อมูลลงคลาวด์ Firebase Database สำเร็จเรียบร้อยครับ!');
-                    form.reset(); // ล้างฟอร์มให้ว่าง
-                } catch (error) {
-                    console.error("Upload Error: ", error);
-                    alert('เกิดข้อผิดพลาดในการส่งข้อมูล: ' + error.message);
-                }
-            });
+            try {
+                // ส่งข้อมูลเข้าเซิร์ฟเวอร์คลาวด์
+                await addDoc(collection(db, "portalItems"), newItem);
+                alert('🚀 อัปโหลดข้อมูลลงคลาวด์ Firebase Database สำเร็จเรียบร้อยครับ!');
+                e.target.reset(); // ล้างฟอร์ม
+            } catch (error) {
+                console.error("Firebase Error: ", error);
+                alert('Firebase ปฏิเสธการบันทึกข้อมูล: ' + error.message);
+            }
         }
     </script>
 </body>
