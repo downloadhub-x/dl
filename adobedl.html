@@ -3,473 +3,211 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Adobe Applications | Workspace Portal</title>
-	
+    <title>Workspace Portal</title>
     <script>
-        // 🔥 ตรวจสอบทันทีว่าเคยล็อกอินหรือยัง? 
-        if (sessionStorage.getItem('isLoggedIn') !== 'true') {
-            alert('กรุณาเข้าสู่ระบบก่อนใช้งานหน้าเว็บนี้ครับ!');
-            window.location.href = 'index.html'; // ดีดกลับหน้าแรกทันที
-        }
+        if (sessionStorage.getItem('isLoggedIn') !== 'true') { window.location.href = 'index.html'; }
     </script>
-
     <style>
-        /* --- ตั้งค่าตัวแปรสำหรับระบบ Dark / Light Mode --- */
         :root {
-            --bg-body: #0a0a0a;
-            --bg-sidebar: #111111;
-            --bg-card: linear-gradient(145deg, #151515, #222222);
-            --border-color: rgba(212, 175, 55, 0.15);
-            --text-main: #ffffff;
-            --text-sub: #aaaaaa;
-            --gold: #d4af37;
-            --gold-hover: linear-gradient(45deg, #af8f2c, #d4af37);
-            --shadow: rgba(212, 175, 55, 0.2);
+            --bg-body: #0a0a0a; --bg-sidebar: #111111; --bg-card: linear-gradient(145deg, #151515, #222222);
+            --border-color: rgba(212, 175, 55, 0.15); --text-main: #ffffff; --text-sub: #aaaaaa;
+            --gold: #d4af37; --gold-hover: linear-gradient(45deg, #af8f2c, #d4af37); --shadow: rgba(212, 175, 55, 0.2);
         }
-
         [data-theme="light"] {
-            --bg-body: #f4f5f7;
-            --bg-sidebar: #ffffff;
-            --bg-card: linear-gradient(145deg, #ffffff, #eaeaea);
-            --border-color: rgba(175, 143, 44, 0.3);
-            --text-main: #1a1a1a;
-            --text-sub: #555555;
-            --shadow: rgba(175, 143, 44, 0.15);
+            --bg-body: #f4f5f7; --bg-sidebar: #ffffff; --bg-card: linear-gradient(145deg, #ffffff, #eaeaea);
+            --border-color: rgba(175, 143, 44, 0.3); --text-main: #1a1a1a; --text-sub: #555555; --shadow: rgba(175, 143, 44, 0.15);
         }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; transition: background 0.3s, color 0.3s, border-color 0.3s; }
+        body { background: var(--bg-body); color: var(--text-main); min-height: 100vh; display: flex; }
+        
+        .sidebar { width: 260px; background: var(--bg-sidebar); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; justify-content: space-between; padding: 30px 20px; position: fixed; height: 100vh; z-index: 100; }
+        .sidebar-brand h2 { color: var(--gold); font-size: 1.5rem; text-align: center; margin-bottom: 40px; text-shadow: 0 0 10px var(--shadow); }
+        .sidebar-menu { list-style: none; flex-grow: 1; }
+        .sidebar-link { text-decoration: none; display: block; margin-bottom: 10px; }
+        .sidebar-item { padding: 14px 18px; color: var(--text-sub); font-weight: 600; cursor: pointer; border-radius: 8px; display: flex; align-items: center; gap: 12px; transition: all 0.3s; }
+        .sidebar-link:hover .sidebar-item, .sidebar-link.active .sidebar-item { background: var(--gold); color: #111; box-shadow: 0 4px 12px var(--shadow); }
+        
+        .sidebar-footer { display: flex; flex-direction: column; gap: 15px; }
+        .theme-toggle-btn { background: transparent; border: 1px solid var(--gold); color: var(--gold); padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .theme-toggle-btn:hover { background: var(--gold); color: #111; }
+        .btn-logout { background: transparent; border: none; color: #666; cursor: pointer; text-decoration: underline; text-align: center; }
+        .btn-logout:hover { color: #ff4d4d; }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-        }
+        .main-content { margin-left: 260px; padding: 50px 40px; width: calc(100% - 260px); }
+        header { text-align: center; margin-bottom: 50px; }
+        header h1 { color: var(--gold); font-size: 2.5rem; letter-spacing: 2px; margin-bottom: 10px; text-shadow: 0 0 15px var(--shadow); }
+        header p { color: var(--text-sub); font-size: 1rem; }
 
-        body {
-            background: var(--bg-body);
-            color: var(--text-main);
-            min-height: 100vh;
-            display: flex; 
-        }
+        .shortcut-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; width: 100%; max-width: 1200px; align-items: start; margin: 0 auto; }
+        .shortcut-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 25px; display: flex; flex-direction: column; justify-content: space-between; transition: all 0.3s ease-in-out; position: relative; overflow: hidden; }
+        .shortcut-card:hover { border-color: var(--gold); box-shadow: 0 10px 30px var(--shadow); }
+        
+        .card-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; padding-bottom: 10px; }
+        .app-title { display: flex; align-items: center; gap: 10px; font-size: 1.3rem; font-weight: bold; }
+        
+        .dot { width: 10px; height: 10px; border-radius: 50%; }
+        .dot-ps { background-color: #31a8ff; } .dot-pr { background-color: #ea77ff; }
+        .dot-ai { background-color: #ff9a00; } .dot-ae { background-color: #9999ff; }
+        .dot-g2 { background-color: #00ffcc; } .dot-g5 { background-color: #4ef037; }
 
-        /* --- แถบเมนูด้านข้าง (Sidebar) --- */
-        .sidebar {
-            width: 260px;
-            background: var(--bg-sidebar);
-            border-right: 1px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: 30px 20px;
-            position: fixed;
-            height: 100vh;
-            z-index: 100;
-        }
+        .toggle-icon { color: var(--gold); font-size: 0.9rem; transition: transform 0.3s; background: rgba(212, 175, 55, 0.1); padding: 5px 10px; border-radius: 6px; border: 1px solid rgba(212, 175, 55, 0.3); }
+        .shortcut-card.active .toggle-icon { transform: rotate(180deg); background: var(--gold); color: #111; }
 
-        .sidebar-brand h2 {
-            color: var(--gold);
-            font-size: 1.5rem;
-            letter-spacing: 1px;
-            text-align: center;
-            margin-bottom: 40px;
-            text-shadow: 0 0 10px var(--shadow);
-        }
+        .app-details { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-in-out, padding 0.4s ease-in-out; color: var(--text-sub); font-size: 0.95rem; line-height: 1.6; }
+        .shortcut-card.active .app-details { max-height: 600px; padding-top: 15px; padding-bottom: 15px; }
+        .app-preview-img { width: 100%; height: auto; max-height: 180px; object-fit: cover; border-radius: 8px; margin-top: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 10px rgba(0,0,0,0.4); }
 
-        .sidebar-menu {
-            list-style: none;
-            flex-grow: 1;
-        }
-
-        .sidebar-link {
-            text-decoration: none;
-            display: block;
-            margin-bottom: 10px;
-        }
-
-        .sidebar-item {
-            padding: 14px 18px;
-            color: var(--text-sub);
-            font-weight: 600;
-            cursor: pointer;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            transition: all 0.3s ease;
-        }
-
-        .sidebar-link:hover .sidebar-item, 
-        .sidebar-link.active .sidebar-item {
-            background: var(--gold);
-            color: #111;
-            box-shadow: 0 4px 12px var(--shadow);
-            transform: translateX(5px);
-        }
-
-        /* พื้นที่จัดวางปุ่มด้านล่าง Sidebar */
-        .sidebar-footer {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .theme-toggle-btn {
-            background: transparent;
-            border: 1px solid var(--gold);
-            color: var(--gold);
-            padding: 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            transition: all 0.3s ease;
-        }
-
-        .theme-toggle-btn:hover {
-            background: var(--gold);
-            color: #111;
-            box-shadow: 0 0 15px var(--shadow);
-        }
-
-        .btn-logout {
-            background: transparent;
-            border: none;
-            color: #666;
-            cursor: pointer;
-            text-decoration: underline;
-            font-size: 0.9rem;
-            transition: color 0.3s;
-            text-align: center;
-        }
-        .btn-logout:hover {
-            color: #ff4d4d;
-        }
-
-        /* --- พื้นที่เนื้อหาหลัก (Main Content) --- */
-        .main-content {
-            margin-left: 260px; 
-            padding: 50px 40px;
-            width: calc(100% - 260px);
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 50px;
-        }
-
-        header h1 {
-            color: var(--gold);
-            font-size: 2.5rem;
-            letter-spacing: 2px;
-            margin-bottom: 10px;
-            text-shadow: 0 0 15px var(--shadow);
-        }
-
-        header p {
-            color: var(--text-sub);
-            font-size: 1rem;
-        }
-
-        .shortcut-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 30px;
-            width: 100%;
-            max-width: 1200px;
-            align-items: start; 
-            margin: 0 auto;
-        }
-
-        .shortcut-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 25px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            transition: all 0.3s ease-in-out;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .shortcut-card:hover {
-            border-color: var(--gold);
-            box-shadow: 0 10px 30px var(--shadow);
-        }
-
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-            user-select: none;
-            padding-bottom: 10px;
-        }
-
-        .app-title {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 1.3rem;
-            font-weight: bold;
-        }
-
-        .dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-        }
-        .dot-ps { background-color: #31a8ff; }
-        .dot-pr { background-color: #ea77ff; }
-        .dot-ai { background-color: #ff9a00; }
-        .dot-ae { background-color: #9999ff; }
-        .dot-pass { background-color: #ffc83b; }
-
-        .toggle-icon {
-            color: var(--gold);
-            font-size: 0.9rem;
-            transition: transform 0.3s ease;
-            background: rgba(212, 175, 55, 0.1);
-            padding: 5px 10px;
-            border-radius: 6px;
-            border: 1px solid rgba(212, 175, 55, 0.3);
-        }
-
-        .shortcut-card.active .toggle-icon {
-            transform: rotate(180deg);
-            background: var(--gold);
-            color: #111;
-        }
-
-        /* ปรับแต่งส่วนรายละเอียดให้รองรับรูปภาพแบบ Dynamic */
-        .app-details {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.4s ease-in-out, padding 0.4s ease-in-out;
-            color: var(--text-sub);
-            font-size: 0.95rem;
-            line-height: 1.6;
-        }
-
-        .shortcut-card.active .app-details {
-            max-height: 600px; /* เพิ่มความสูงเผื่อให้รูปภาพแสดงผล */
-            padding-top: 15px;
-            padding-bottom: 15px;
-        }
-
-        /* 📸 ตกแต่งและควบคุมขนาดของรูปภาพหน้าจอโปรแกรม */
-        .app-preview-img {
-            width: 100%;
-            height: auto;
-            max-height: 180px;
-            object-fit: cover;
-            border-radius: 8px;
-            margin-top: 12px;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
-
-        .btn-link {
-            display: block;
-            text-align: center;
-            padding: 12px;
-            background: transparent;
-            color: var(--gold);
-            border: 2px solid var(--gold);
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 0.95rem;
-            letter-spacing: 1px;
-            transition: all 0.3s ease;
-            margin-top: 15px;
-        }
-
-        .btn-link:hover {
-            background: var(--gold-hover);
-            color: #111;
-            box-shadow: 0 0 15px var(--shadow);
-        }
-
-        .btn-link:active {
-            transform: scale(0.98);
-        }
+        .btn-link { display: block; text-align: center; padding: 12px; background: transparent; color: var(--gold); border: 2px solid var(--gold); border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.95rem; transition: all 0.3s; margin-top: 15px; }
+        .btn-link:hover { background: var(--gold-hover); color: #111; box-shadow: 0 0 15px var(--shadow); }
+        
+        .btn-delete { background: #ff4d4d; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 12px; font-size: 0.85rem; width: fit-content; align-self: flex-end; }
+        .btn-delete:hover { background: #cc3333; }
     </style>
 </head>
 <body>
 
     <nav class="sidebar">
-        <div class="sidebar-brand">
-            <h2>PORTAL HUB</h2>
-        </div>
-        
+        <div class="sidebar-brand"><h2>PORTAL HUB</h2></div>
         <ul class="sidebar-menu">
-            <a href="dashboard.html" class="sidebar-link">
-                <li class="sidebar-item">🏠 หน้าหลัก</li>
-            </a>
-            <a href="adobedl.html" class="sidebar-link active">
-                <li class="sidebar-item">🎨 หมวดหมู่ Adobe</li>
-            </a>
-            <a href="gamesdl.html" class="sidebar-link">
-                <li class="sidebar-item">🎮 หมวดหมู่ Games</li>
-            </a>
-            <a href="etcdl.html" class="sidebar-link">
-                <li class="sidebar-item">📂 หมวดหมู่ ETC.</li>
-            </a>
+            <a href="dashboard.html" class="sidebar-link"><li class="sidebar-item">🏠 หน้าหลัก</li></a>
+            <a href="adobedl.html" id="nav-adobe" class="sidebar-link active"><li class="sidebar-item">🎨 หมวดหมู่ Adobe</li></a>
+            <a href="gamesdl.html" id="nav-games" class="sidebar-link"><li class="sidebar-item">🎮 หมวดหมู่ Games</li></a>
+            <a href="etcdl.html" id="nav-etc" class="sidebar-link"><li class="sidebar-item">📂 หมวดหมู่ ETC.</li></a>
         </ul>
-
         <div class="sidebar-footer">
-            <button class="theme-toggle-btn" onclick="toggleTheme()">
-                <span id="theme-icon">☀️</span> <span id="theme-text">Light Mode</span>
-            </button>
+            <button class="theme-toggle-btn" onclick="toggleTheme()"><span id="theme-icon">☀️</span> <span id="theme-text">Light Mode</span></button>
             <button class="btn-logout" onclick="logout()">ออกจากระบบ</button>
         </div>
     </nav>
 
     <main class="main-content">
         <header>
-            <h1>CREATIVE WORKSPACE</h1>
-            <p>ยินดีต้อนรับคุณ Thanpisit | หมวดหมู่โปรแกรม Adobe</p>
+            <h1 id="pageTitle">WORKSPACE PORTAL</h1>
+            <p>ระบบคลังดาวน์โหลดโปรแกรมและจัดการข้อมูลรวมศูนย์ของคุณ</p>
         </header>
 
-        <div class="shortcut-grid">
-            <div class="shortcut-card">
-                <div>
-                    <div class="card-header" onclick="toggleCard(this)">
-                        <div class="app-title">
-                            <span class="dot dot-ps"></span> Adobe Photoshop 2024
-                        </div>
-                        <span class="toggle-icon">▼ ดีเทล</span>
-                    </div>
-                    <div class="app-details">
-                        <p>โปรแกรมตกแต่งรูปภาพและดีไซน์กราฟิกระดับมาตรฐานสากล เวอร์ชัน 2024 รองรับการทำงานขับเคลื่อนด้วย AI พื้นฐาน (Generative Fill) เหมาะสำหรับงานรีทัชเสถียรๆ</p>
-                        <p>__________________________________________________</p>
-                        <p style="margin-top: 8px;">Password : T070844@Photoshop2024</p>
-                        <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500" alt="Photoshop 2024 Preview" class="app-preview-img">
-                    </div>
-                </div>
-                <a href="https://www.mediafire.com/file/0za8u5sz56gtw5x/Adobe_Photoshop_2024_v25.12.4_x64.rar/file" target="_blank" class="btn-link">DOWNLOAD</a>
+        <div class="shortcut-grid" id="dataGrid">
             </div>
-
-            <div class="shortcut-card">
-                <div>
-                    <div class="card-header" onclick="toggleCard(this)">
-                        <div class="app-title">
-                            <span class="dot dot-ps"></span> Adobe Photoshop 2025
-                        </div>
-                        <span class="toggle-icon">▼ ดีเทล</span>
-                    </div>
-                    <div class="app-details">
-                        <p>สัมผัสฟีเจอร์แต่งภาพเจเนอเรชันใหม่ล่าสุดแห่งปี 2025 อัปเกรดความสามารถระบบ AI อัจฉริยะที่แม่นยำขึ้น คัดแยกเลเยอร์ได้เนียนกริบ และทำงานร่วมกับ Cloud ได้รวดเร็วยิ่งขึ้น</p>
-                        <p>__________________________________________________</p>
-                        <p style="margin-top: 8px;">Password : T070844@Photoshop</p>
-                        <img src="https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=500" alt="Photoshop 2025 Preview" class="app-preview-img">
-                    </div>
-                </div>
-                <a href="https://www.mediafire.com/file/xyaxw4zqfu4shk3/Adobe_Photoshop_2025_V26.6.rar/file" target="_blank" class="btn-link">DOWNLOAD</a>
-            </div>
-
-            <div class="shortcut-card">
-                <div>
-                    <div class="card-header" onclick="toggleCard(this)">
-                        <div class="app-title">
-                            <span class="dot dot-pr"></span> Adobe Premiere Pro 2025
-                        </div>
-                        <span class="toggle-icon">▼ ดีเทล</span>
-                    </div>
-                    <div class="app-details">
-                        <p>สุดยอดซอฟต์แวร์ตัดต่อวิดีโอระดับมืออาชีพสำหรับเวอร์ชัน 2025 เพิ่มฟังก์ชันตัดต่อวิดีโอจากข้อความ (Text-Based Editing) ที่สมบูรณ์แบบ และการมิกซ์เสียงออโตเมติกด้วย AI</p>
-                        <p>__________________________________________________</p>
-                        <p style="margin-top: 8px;">Password : T070844@Premierepro</p>
-                        <img src="https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=500" alt="Premiere Pro Preview" class="app-preview-img">
-                    </div>
-                </div>
-                <a href="https://www.mediafire.com/file/vn509gg8s96rh3t/Adobe_Premierepro_2025.rar/file" target="_blank" class="btn-link">DOWNLOAD</a>
-            </div>
-
-            <div class="shortcut-card">
-                <div>
-                    <div class="card-header" onclick="toggleCard(this)">
-                        <div class="app-title">
-                            <span class="dot dot-ai"></span> Adobe Illustrator
-                        </div>
-                        <span class="toggle-icon">▼ ดีเทล</span>
-                    </div>
-                    <div class="app-details">
-                        <p>โปรแกรมออกแบบกราฟิกแบบเวกเตอร์ (Vector) อันดับหนึ่ง สำหรับงานออกแบบโลโก้ ไอคอน ลายเส้น หรืองานสิ่งพิมพ์ที่ต้องการความคมชัดสูงในทุกขนาด</p>
-                        <img src="https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=500" alt="Illustrator Preview" class="app-preview-img">
-                    </div>
-                </div>
-                <a href="https://www.adobe.com/products/illustrator.html" target="_blank" class="btn-link">DOWNLOAD</a>
-            </div>
-
-            <div class="shortcut-card">
-                <div>
-                    <div class="card-header" onclick="toggleCard(this)">
-                        <div class="app-title">
-                            <span class="dot dot-ae"></span> Adobe After Effects
-                        </div>
-                        <span class="toggle-icon">▼ ดีเทล</span>
-                    </div>
-                    <div class="app-details">
-                        <p>โปรแกรมสร้างเอฟเฟกต์ภาพเคลื่อนไหว (Motion Graphics) และ Visual Effects (VFX) ระดับอุตสาหกรรมภาพยนตร์ ครบเครื่องเรื่องแอนิเมชัน 2D และ 3D</p>
-                        <img src="https://images.unsplash.com/photo-1551269901-5c5e14c25df7?w=500" alt="After Effects Preview" class="app-preview-img">
-                    </div>
-                </div>
-                <a href="https://www.adobe.com/products/aftereffects.html" target="_blank" class="btn-link">DOWNLOAD</a>
-            </div>
-
-            <div class="shortcut-card">
-                <div>
-                    <div class="card-header" onclick="toggleCard(this)">
-                        <div class="app-title">
-                            <span class="dot dot-pass"></span> Adobe Pass
-                        </div>
-                        <span class="toggle-icon">▼ ดีเทล</span>
-                    </div>
-                    <div class="app-details">
-                        <p>ระบบการยืนยันตัวตนและการเข้าถึงสิทธิ์การใช้งาน (Authentication) ช่วยเชื่อมต่อและจัดการบริการต่างๆ ของ Adobe ให้ปลอดภัยและราบรื่นยิ่งขึ้นสำหรับการทำงานระดับองค์กร</p>
-                        <p>__________________________________________________</p>
-                        <p style="margin-top: 8px;">Username : thanpisit</p>
-                        <p>Password : wongjaisak</p>
-                        <img src="https://images.unsplash.com/photo-1563986768609-322da13575f3?w=500" alt="Adobe Pass Preview" class="app-preview-img">
-                    </div>
-                </div>
-                <a href="https://www.mediafire.com/file/1d7l9dksgdt5p2r/Adobe_File_Password.exe/file" target="_blank" class="btn-link">DOWNLOAD</a>
-            </div>
-        </div>
     </main>
 
-    <script>
-        function toggleTheme() {
-            const currentTheme = document.body.getAttribute('data-theme');
-            const themeIcon = document.getElementById('theme-icon');
-            const themeText = document.getElementById('theme-text');
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, query, where, getDocs, doc, deleteDoc, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-            if (currentTheme === 'light') {
-                document.body.removeAttribute('data-theme');
-                themeIcon.innerText = '☀️';
-                themeText.innerText = 'Light Mode';
-            } else {
-                document.body.setAttribute('data-theme', 'light');
-                themeIcon.innerText = '🌙';
-                themeText.innerText = 'Dark Mode';
+        // 🔥 เอา Firebase Config ของคุณมาวางตรงนี้ให้ถูกต้องเหมือนหน้าแรก
+        const firebaseConfig = {
+  apiKey: "AIzaSyB-v9u49UfZ0CBt8bYQoFMCB6QuqLxspZk",
+  authDomain: "download-hub-e940e.firebaseapp.com",
+  databaseURL: "https://download-hub-e940e-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "download-hub-e940e",
+  storageBucket: "download-hub-e940e.firebasestorage.app",
+  messagingSenderId: "950263847548",
+  appId: "1:950263847548:web:809b1c61e1628303bb87f9",
+  measurementId: "G-TWQJELXBWM"
+};
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // 💡 จุดที่ 2: ระบุหมวดหมู่ของหน้านั้นๆ ('adobe', 'games', หรือ 'etc')
+        const currentCategory = 'adobe'; 
+
+        // 🌟 ฟังก์ชันดึงข้อมูลมาแสดงผล (Dynamic Render)
+        async function renderItems() {
+            const grid = document.getElementById('dataGrid');
+            if (!grid) return;
+            
+            const isLatestAdmin = sessionStorage.getItem('role') === 'admin';
+
+            try {
+                const q = query(collection(db, "portalItems"), where("category", "==", currentCategory), orderBy("createdAt", "asc"));
+                const querySnapshot = await getDocs(q);
+                
+                if (querySnapshot.empty) {
+                    grid.innerHTML = `<p style="color:var(--text-sub); text-align:center; grid-column:1/-1; padding:40px;">ไม่มีข้อมูลรายการในหมวดหมู่นี้ กรุณาเข้าเพิ่มข้อมูลในหน้าแอดมิน</p>`;
+                    return;
+                }
+
+                let htmlContent = '';
+                querySnapshot.forEach((docSnap) => {
+                    const item = docSnap.data();
+                    const docId = docSnap.id;
+
+                    htmlContent += `
+                        <div class="shortcut-card">
+                            <div>
+                                <div class="card-header" onclick="toggleCard(this)">
+                                    <div class="app-title"><span class="dot ${item.dotClass}"></span> ${item.title}</div>
+                                    <span class="toggle-icon">▼ ดีเทล</span>
+                                </div>
+                                <div class="app-details">
+                                    <p>${item.details}</p>
+                                    ${item.accountInfo ? `<p>__________________________________________________</p><p style="margin-top:8px;">${item.accountInfo}</p>` : ''}
+                                    <img src="${item.imgUrl}" alt="${item.title}" class="app-preview-img">
+                                </div>
+                            </div>
+                            <a href="${item.downloadUrl}" target="_blank" class="btn-link">${item.btnText}</a>
+                            ${isLatestAdmin ? `<button class="btn-delete" onclick="deleteItem('${docId}')">🗑️ ลบรายการนี้</button>` : ''}
+                        </div>
+                    `;
+                });
+                
+                grid.innerHTML = htmlContent;
+            } catch (error) {
+                console.error("Error: ", error);
+                grid.innerHTML = `<p style="color:red; text-align:center; grid-column:1/-1;">เกิดข้อผิดพลาดในการดึงข้อมูลจากฐานข้อมูลคลาวด์</p>`;
             }
         }
 
-        function logout() {
+        // 🌟 ผูกฟังก์ชันเข้ากับ window เพื่อให้ HTML ฝั่งปุ่มกดสามารถมองเห็นและเรียกใช้ได้
+        window.toggleCard = function(headerElement) {
+            headerElement.closest('.shortcut-card').classList.toggle('active');
+        }
+
+        window.deleteItem = async function(id) {
+            if (confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้ออกจาก Firebase?')) {
+                try {
+                    await deleteDoc(doc(db, "portalItems", id));
+                    alert('ลบรายการสำเร็จแล้วครับ!');
+                    renderItems();
+                } catch (error) {
+                    alert('ไม่สามารถลบข้อมูลได้: ' + error.message);
+                }
+            }
+        }
+
+        window.toggleTheme = function() {
+            const currentTheme = document.body.getAttribute('data-theme');
+            const themeIcon = document.getElementById('theme-icon');
+            const themeText = document.getElementById('theme-text');
+            if (currentTheme === 'light') {
+                document.body.removeAttribute('data-theme');
+                themeIcon.innerText = '☀️'; themeText.innerText = 'Light Mode';
+            } else {
+                document.body.setAttribute('data-theme', 'light');
+                themeIcon.innerText = '🌙'; themeText.innerText = 'Dark Mode';
+            }
+        }
+
+        window.logout = function() { 
             sessionStorage.clear(); 
             window.location.href = 'index.html'; 
         }
 
-        function toggleCard(headerElement) {
-            const card = headerElement.closest('.shortcut-card');
-            card.classList.toggle('active');
+        // ⚙️ ตรวจสอบสิทธิ์แอดมิน เพื่อแสดงลิ้งก์ไปหน้าแอดมินบนเมนูด้านข้าง
+        if (sessionStorage.getItem('role') === 'admin') {
+            const sidebarMenu = document.querySelector('.sidebar-menu');
+            if (sidebarMenu) {
+                const adminLink = document.createElement('a');
+                adminLink.href = 'admin.html';
+                adminLink.className = 'sidebar-link';
+                adminLink.innerHTML = `<li class="sidebar-item" style="border: 1px dashed var(--gold); color: var(--gold);">⚙️ หน้าแอดมินอัปโหลด</li>`;
+                sidebarMenu.appendChild(adminLink);
+            }
         }
+
+        // เรียกใช้งานฟังก์ชันดึงข้อมูลทันทีเมื่อโหลดหน้าเว็บสำเร็จ
+        document.addEventListener('DOMContentLoaded', renderItems);
     </script>
 </body>
 </html>

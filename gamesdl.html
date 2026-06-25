@@ -3,488 +3,211 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Games Collection | Workspace Portal</title>
-	
+    <title>Workspace Portal</title>
     <script>
-        // 🔥 ตรวจสอบทันทีว่าเคยล็อกอินหรือยัง? 
-        if (sessionStorage.getItem('isLoggedIn') !== 'true') {
-            alert('กรุณาเข้าสู่ระบบก่อนใช้งานหน้าเว็บนี้ครับ!');
-            window.location.href = 'index.html'; // ดีดกลับหน้าแรกทันที
-        }
+        if (sessionStorage.getItem('isLoggedIn') !== 'true') { window.location.href = 'index.html'; }
     </script>
-
     <style>
-        /* --- ตั้งค่าตัวแปรสำหรับระบบ Dark / Light Mode --- */
         :root {
-            --bg-body: #0a0a0a;
-            --bg-sidebar: #111111;
-            --bg-card: linear-gradient(145deg, #151515, #222222);
-            --border-color: rgba(212, 175, 55, 0.15);
-            --text-main: #ffffff;
-            --text-sub: #aaaaaa;
-            --gold: #d4af37;
-            --gold-hover: linear-gradient(45deg, #af8f2c, #d4af37);
-            --shadow: rgba(212, 175, 55, 0.2);
+            --bg-body: #0a0a0a; --bg-sidebar: #111111; --bg-card: linear-gradient(145deg, #151515, #222222);
+            --border-color: rgba(212, 175, 55, 0.15); --text-main: #ffffff; --text-sub: #aaaaaa;
+            --gold: #d4af37; --gold-hover: linear-gradient(45deg, #af8f2c, #d4af37); --shadow: rgba(212, 175, 55, 0.2);
         }
-
         [data-theme="light"] {
-            --bg-body: #f4f5f7;
-            --bg-sidebar: #ffffff;
-            --bg-card: linear-gradient(145deg, #ffffff, #eaeaea);
-            --border-color: rgba(175, 143, 44, 0.3);
-            --text-main: #1a1a1a;
-            --text-sub: #555555;
-            --shadow: rgba(175, 143, 44, 0.15);
+            --bg-body: #f4f5f7; --bg-sidebar: #ffffff; --bg-card: linear-gradient(145deg, #ffffff, #eaeaea);
+            --border-color: rgba(175, 143, 44, 0.3); --text-main: #1a1a1a; --text-sub: #555555; --shadow: rgba(175, 143, 44, 0.15);
         }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; transition: background 0.3s, color 0.3s, border-color 0.3s; }
+        body { background: var(--bg-body); color: var(--text-main); min-height: 100vh; display: flex; }
+        
+        .sidebar { width: 260px; background: var(--bg-sidebar); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; justify-content: space-between; padding: 30px 20px; position: fixed; height: 100vh; z-index: 100; }
+        .sidebar-brand h2 { color: var(--gold); font-size: 1.5rem; text-align: center; margin-bottom: 40px; text-shadow: 0 0 10px var(--shadow); }
+        .sidebar-menu { list-style: none; flex-grow: 1; }
+        .sidebar-link { text-decoration: none; display: block; margin-bottom: 10px; }
+        .sidebar-item { padding: 14px 18px; color: var(--text-sub); font-weight: 600; cursor: pointer; border-radius: 8px; display: flex; align-items: center; gap: 12px; transition: all 0.3s; }
+        .sidebar-link:hover .sidebar-item, .sidebar-link.active .sidebar-item { background: var(--gold); color: #111; box-shadow: 0 4px 12px var(--shadow); }
+        
+        .sidebar-footer { display: flex; flex-direction: column; gap: 15px; }
+        .theme-toggle-btn { background: transparent; border: 1px solid var(--gold); color: var(--gold); padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .theme-toggle-btn:hover { background: var(--gold); color: #111; }
+        .btn-logout { background: transparent; border: none; color: #666; cursor: pointer; text-decoration: underline; text-align: center; }
+        .btn-logout:hover { color: #ff4d4d; }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-        }
+        .main-content { margin-left: 260px; padding: 50px 40px; width: calc(100% - 260px); }
+        header { text-align: center; margin-bottom: 50px; }
+        header h1 { color: var(--gold); font-size: 2.5rem; letter-spacing: 2px; margin-bottom: 10px; text-shadow: 0 0 15px var(--shadow); }
+        header p { color: var(--text-sub); font-size: 1rem; }
 
-        body {
-            background: var(--bg-body);
-            color: var(--text-main);
-            min-height: 100vh;
-            display: flex; 
-        }
+        .shortcut-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; width: 100%; max-width: 1200px; align-items: start; margin: 0 auto; }
+        .shortcut-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 25px; display: flex; flex-direction: column; justify-content: space-between; transition: all 0.3s ease-in-out; position: relative; overflow: hidden; }
+        .shortcut-card:hover { border-color: var(--gold); box-shadow: 0 10px 30px var(--shadow); }
+        
+        .card-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; padding-bottom: 10px; }
+        .app-title { display: flex; align-items: center; gap: 10px; font-size: 1.3rem; font-weight: bold; }
+        
+        .dot { width: 10px; height: 10px; border-radius: 50%; }
+        .dot-ps { background-color: #31a8ff; } .dot-pr { background-color: #ea77ff; }
+        .dot-ai { background-color: #ff9a00; } .dot-ae { background-color: #9999ff; }
+        .dot-g2 { background-color: #00ffcc; } .dot-g5 { background-color: #4ef037; }
 
-        /* --- แถบเมนูด้านข้าง (Sidebar) --- */
-        .sidebar {
-            width: 260px;
-            background: var(--bg-sidebar);
-            border-right: 1px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: 30px 20px;
-            position: fixed;
-            height: 100vh;
-            z-index: 100;
-        }
+        .toggle-icon { color: var(--gold); font-size: 0.9rem; transition: transform 0.3s; background: rgba(212, 175, 55, 0.1); padding: 5px 10px; border-radius: 6px; border: 1px solid rgba(212, 175, 55, 0.3); }
+        .shortcut-card.active .toggle-icon { transform: rotate(180deg); background: var(--gold); color: #111; }
 
-        .sidebar-brand h2 {
-            color: var(--gold);
-            font-size: 1.5rem;
-            letter-spacing: 1px;
-            text-align: center;
-            margin-bottom: 40px;
-            text-shadow: 0 0 10px var(--shadow);
-        }
+        .app-details { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-in-out, padding 0.4s ease-in-out; color: var(--text-sub); font-size: 0.95rem; line-height: 1.6; }
+        .shortcut-card.active .app-details { max-height: 600px; padding-top: 15px; padding-bottom: 15px; }
+        .app-preview-img { width: 100%; height: auto; max-height: 180px; object-fit: cover; border-radius: 8px; margin-top: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 10px rgba(0,0,0,0.4); }
 
-        .sidebar-menu {
-            list-style: none;
-            flex-grow: 1;
-        }
-
-        .sidebar-link {
-            text-decoration: none;
-            display: block;
-            margin-bottom: 10px;
-        }
-
-        .sidebar-item {
-            padding: 14px 18px;
-            color: var(--text-sub);
-            font-weight: 600;
-            cursor: pointer;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            transition: all 0.3s ease;
-        }
-
-        .sidebar-link:hover .sidebar-item, 
-        .sidebar-link.active .sidebar-item {
-            background: var(--gold);
-            color: #111;
-            box-shadow: 0 4px 12px var(--shadow);
-            transform: translateX(5px);
-        }
-
-        /* พื้นที่จัดวางปุ่มด้านล่าง Sidebar */
-        .sidebar-footer {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .theme-toggle-btn {
-            background: transparent;
-            border: 1px solid var(--gold);
-            color: var(--gold);
-            padding: 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            transition: all 0.3s ease;
-        }
-
-        .theme-toggle-btn:hover {
-            background: var(--gold);
-            color: #111;
-            box-shadow: 0 0 15px var(--shadow);
-        }
-
-        .btn-logout {
-            background: transparent;
-            border: none;
-            color: #666;
-            cursor: pointer;
-            text-decoration: underline;
-            font-size: 0.9rem;
-            transition: color 0.3s;
-            text-align: center;
-        }
-        .btn-logout:hover {
-            color: #ff4d4d;
-        }
-
-        /* --- พื้นที่เนื้อหาหลัก (Main Content) --- */
-        .main-content {
-            margin-left: 260px; 
-            padding: 50px 40px;
-            width: calc(100% - 260px);
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 50px;
-        }
-
-        header h1 {
-            color: var(--gold);
-            font-size: 2.5rem;
-            letter-spacing: 2px;
-            margin-bottom: 10px;
-            text-shadow: 0 0 15px var(--shadow);
-        }
-
-        header p {
-            color: var(--text-sub);
-            font-size: 1rem;
-        }
-
-        .shortcut-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 30px;
-            width: 100%;
-            max-width: 1200px;
-            align-items: start; 
-            margin: 0 auto;
-        }
-
-        .shortcut-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 25px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            transition: all 0.3s ease-in-out;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .shortcut-card:hover {
-            border-color: var(--gold);
-            box-shadow: 0 10px 30px var(--shadow);
-        }
-
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-            user-select: none;
-            padding-bottom: 10px;
-        }
-
-        .app-title {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 1.3rem;
-            font-weight: bold;
-        }
-
-        .dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-        }
-        .dot-g1 { background-color: #ff4655; } 
-        .dot-g2 { background-color: #00ffcc; } 
-        .dot-g3 { background-color: #e4a513; } 
-        .dot-g4 { background-color: #5865f2; } 
-        .dot-g5 { background-color: #4ef037; } 
-        .dot-g6 { background-color: #ff9900; } 
-
-        .toggle-icon {
-            color: var(--gold);
-            font-size: 0.9rem;
-            transition: transform 0.3s ease;
-            background: rgba(212, 175, 55, 0.1);
-            padding: 5px 10px;
-            border-radius: 6px;
-            border: 1px solid rgba(212, 175, 55, 0.3);
-        }
-
-        .shortcut-card.active .toggle-icon {
-            transform: rotate(180deg);
-            background: var(--gold);
-            color: #111;
-        }
-
-        .app-details {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.4s ease-in-out, padding 0.4s ease-in-out;
-            color: var(--text-sub);
-            font-size: 0.95rem;
-            line-height: 1.6;
-        }
-
-        .shortcut-card.active .app-details {
-            max-height: 600px; /* เพิ่มพื้นที่ความสูงให้สไลด์เปิดภาพหน้าปกได้พอดี */
-            padding-top: 15px;
-            padding-bottom: 15px;
-        }
-
-        /* 📸 ส่วนปรับแต่งภาพหน้าปกเกมส์ */
-        .app-preview-img {
-            width: 100%;
-            height: auto;
-            max-height: 180px;
-            object-fit: cover;
-            border-radius: 8px;
-            margin-top: 12px;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
-        }
-
-        .btn-link {
-            display: block;
-            text-align: center;
-            padding: 12px;
-            background: transparent;
-            color: var(--gold);
-            border: 2px solid var(--gold);
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 0.95rem;
-            letter-spacing: 1px;
-            transition: all 0.3s ease;
-            margin-top: 15px;
-        }
-
-        .btn-link:hover {
-            background: var(--gold-hover);
-            color: #111;
-            box-shadow: 0 0 15px var(--shadow);
-        }
-
-        .btn-link:active {
-            transform: scale(0.98);
-        }
+        .btn-link { display: block; text-align: center; padding: 12px; background: transparent; color: var(--gold); border: 2px solid var(--gold); border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.95rem; transition: all 0.3s; margin-top: 15px; }
+        .btn-link:hover { background: var(--gold-hover); color: #111; box-shadow: 0 0 15px var(--shadow); }
+        
+        .btn-delete { background: #ff4d4d; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 12px; font-size: 0.85rem; width: fit-content; align-self: flex-end; }
+        .btn-delete:hover { background: #cc3333; }
     </style>
 </head>
 <body>
 
-    <!-- 1. แถบเมนูด้านข้าง (Sidebar) -->
     <nav class="sidebar">
-        <div class="sidebar-brand">
-            <h2>PORTAL HUB</h2>
-        </div>
-        
+        <div class="sidebar-brand"><h2>PORTAL HUB</h2></div>
         <ul class="sidebar-menu">
-            <a href="dashboard.html" class="sidebar-link">
-                <li class="sidebar-item">🏠 หน้าหลัก</li>
-            </a>
-            <a href="adobedl.html" class="sidebar-link">
-                <li class="sidebar-item">🎨 หมวดหมู่ Adobe</li>
-            </a>
-            <a href="gamesdl.html" class="sidebar-link active">
-                <li class="sidebar-item">🎮 หมวดหมู่ Games</li>
-            </a>
-            <a href="etcdl.html" class="sidebar-link">
-                <li class="sidebar-item">📂 หมวดหมู่ ETC.</li>
-            </a>
+            <a href="dashboard.html" class="sidebar-link"><li class="sidebar-item">🏠 หน้าหลัก</li></a>
+            <a href="adobedl.html" id="nav-adobe" class="sidebar-link"><li class="sidebar-item">🎨 หมวดหมู่ Adobe</li></a>
+            <a href="gamesdl.html" id="nav-games" class="sidebar-link active"><li class="sidebar-item">🎮 หมวดหมู่ Games</li></a>
+            <a href="etcdl.html" id="nav-etc" class="sidebar-link"><li class="sidebar-item">📂 หมวดหมู่ ETC.</li></a>
         </ul>
-
         <div class="sidebar-footer">
-            <button class="theme-toggle-btn" onclick="toggleTheme()">
-                <span id="theme-icon">☀️</span> <span id="theme-text">Light Mode</span>
-            </button>
+            <button class="theme-toggle-btn" onclick="toggleTheme()"><span id="theme-icon">☀️</span> <span id="theme-text">Light Mode</span></button>
             <button class="btn-logout" onclick="logout()">ออกจากระบบ</button>
         </div>
     </nav>
 
-    <!-- 2. พื้นที่เนื้อหาหลัก (คลังเกมพร้อมรูปหน้าปก) -->
     <main class="main-content">
         <header>
-            <h1>GAMING HUB</h1>
-            <p>ยินดีต้อนรับคุณ Thanpisit | คลังดาวน์โหลดและลิงก์เข้าใช้งานเกมยอดนิยม</p>
+            <h1 id="pageTitle">WORKSPACE PORTAL</h1>
+            <p>ระบบคลังดาวน์โหลดโปรแกรมและจัดการข้อมูลรวมศูนย์ของคุณ</p>
         </header>
 
-        <div class="shortcut-grid">
-            <!-- เกมที่ 1: Cyberpunk 2077 -->
-            <div class="shortcut-card">
-                <div>
-                    <div class="card-header" onclick="toggleCard(this)">
-                        <div class="app-title">
-                            <span class="dot dot-g2"></span> Cyberpunk 2077
-                        </div>
-                        <span class="toggle-icon">▼ ดีเทล</span>
-                    </div>
-                    <div class="app-details">
-                        <p>เกมแนว Action RPG สไตล์ Open-World ในมหานครแห่งอนาคต Night City จัดเต็มระบบกราฟิก Ray Tracing และสมรรถนะยุคใหม่</p>
-                        <p>__________________________________________________</p>
-                        <p style="margin-top: 8px;">Status : Full Game + Phantom Liberty DLC</p>
-                        <!-- 📸 รูปหน้าปก Cyberpunk 2077 -->
-                        <img src="https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=600" alt="Cyberpunk 2077" class="app-preview-img">
-                    </div>
-                </div>
-                <a href="https://store.steampowered.com/app/1091500/Cyberpunk_2077/" target="_blank" class="btn-link">PLAY GAME</a>
+        <div class="shortcut-grid" id="dataGrid">
             </div>
-
-            <!-- เกมที่ 2: Elden Ring -->
-            <div class="shortcut-card">
-                <div>
-                    <div class="card-header" onclick="toggleCard(this)">
-                        <div class="app-title">
-                            <span class="dot dot-g3"></span> Elden Ring
-                        </div>
-                        <span class="toggle-icon">▼ ดีเทล</span>
-                    </div>
-                    <div class="app-details">
-                        <p>สุดยอดเกมผจญภัยแฟนตาซีแบบมหากาพย์ในดินแดน Lands Between ผลงานชิ้นเอกแนว Soulslike ท้าทายความสามารถและสนุกไปกับการสำรวจระดับลึก</p>
-                        <p>__________________________________________________</p>
-                        <p style="margin-top: 8px;">Status : Updated to Shadow of the Erdtree</p>
-                        <!-- 📸 รูปหน้าปก Elden Ring -->
-                        <img src="https://images.unsplash.com/photo-1655821888788-6107699e173b?w=600" alt="Elden Ring" class="app-preview-img">
-                    </div>
-                </div>
-                <a href="https://store.steampowered.com/app/1245620/ELDEN_RING/" target="_blank" class="btn-link">PLAY GAME</a>
-            </div>
-
-            <!-- เกมที่ 3: Valorant -->
-            <div class="shortcut-card">
-                <div>
-                    <div class="card-header" onclick="toggleCard(this)">
-                        <div class="app-title">
-                            <span class="dot dot-g1"></span> Valorant
-                        </div>
-                        <span class="toggle-icon">▼ ดีเทล</span>
-                    </div>
-                    <div class="app-details">
-                        <p>เกมยิงแนว Tactical Shooter แบบ 5v5 ยอดนิยมจากค่าย Riot Games ผสมผสานฝีมือการยิงและการใช้สกิลเฉพาะตัวของแต่ละเอเจนท์</p>
-                        <p>__________________________________________________</p>
-                        <p style="margin-top: 8px;">Launcher : Riot Client (Free to Play)</p>
-                        <!-- 📸 รูปหน้าปก Valorant -->
-                        <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=600" alt="Valorant" class="app-preview-img">
-                    </div>
-                </div>
-                <a href="https://playvalorant.com/" target="_blank" class="btn-link">LAUNCH GAME</a>
-            </div>
-
-            <!-- เกมที่ 4: Grand Theft Auto V -->
-            <div class="shortcut-card">
-                <div>
-                    <div class="card-header" onclick="toggleCard(this)">
-                        <div class="app-title">
-                            <span class="dot dot-g6"></span> Grand Theft Auto V
-                        </div>
-                        <span class="toggle-icon">▼ ดีเทล</span>
-                    </div>
-                    <div class="app-details">
-                        <p>มหากาพย์เกมเปิดโลกกว้างระดับตำนาน ผจญภัยไปกับสามตัวละครหลักในเมือง Los Santos หรือเข้าร่วมโลกออนไลน์กับกลุ่มเพื่อนผ่านระบบ FiveM</p>
-                        <!-- 📸 รูปหน้าปก GTA V -->
-                        <img src="https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=600" alt="GTA V" class="app-preview-img">
-                    </div>
-                </div>
-                <a href="https://store.steampowered.com/app/271590/Grand_Theft_Auto_V/" target="_blank" class="btn-link">PLAY GAME</a>
-            </div>
-
-            <!-- เกมที่ 5: Black Myth: Wukong -->
-            <div class="shortcut-card">
-                <div>
-                    <div class="card-header" onclick="toggleCard(this)">
-                        <div class="app-title">
-                            <span class="dot dot-g4"></span> Black Myth: Wukong
-                        </div>
-                        <span class="toggle-icon">▼ ดีเทล</span>
-                    </div>
-                    <div class="app-details">
-                        <p>เกม Action RPG อิงนิยายปรัมปราจีนสุดยิ่งใหญ่ เรื่องราวของ "ผู้ถูกเลือก" ท่องไปในโลกที่เต็มไปด้วยความลึกลับและเผชิญหน้ากับบอสสุดอลังการ</p>
-                        <!-- 📸 รูปหน้าปก Black Myth Wukong -->
-                        <img src="https://images.unsplash.com/photo-1605899435973-ca2d1a8861cf?w=600" alt="Black Myth Wukong" class="app-preview-img">
-                    </div>
-                </div>
-                <a href="https://store.steampowered.com/app/2358720/Black_Myth_Wukong/" target="_blank" class="btn-link">PLAY GAME</a>
-            </div>
-
-            <!-- เกมที่ 6: Minecraft -->
-            <div class="shortcut-card">
-                <div>
-                    <div class="card-header" onclick="toggleCard(this)">
-                        <div class="app-title">
-                            <span class="dot dot-g5"></span> Minecraft
-                        </div>
-                        <span class="toggle-icon">▼ ดีเทล</span>
-                    </div>
-                    <div class="app-details">
-                        <p>เกมแซนด์บ็อกซ์แนวบล็อกเหลี่ยมสร้างสรรค์ไร้ขีดจำกัด ปลดปล่อยจินตนาการ คราฟต์ไอเทม เอาชีวิตรอด และผจญภัยในโลกสุ่มขนาดยักษ์</p>
-                        <p>__________________________________________________</p>
-                        <p style="margin-top: 8px;">Version : Java & Bedrock Edition</p>
-                        <!-- 📸 รูปหน้าปก Minecraft -->
-                        <img src="https://images.unsplash.com/photo-1605901309584-818e25960a8f?w=600" alt="Minecraft" class="app-preview-img">
-                    </div>
-                </div>
-                <a href="https://www.minecraft.net/" target="_blank" class="btn-link">LAUNCH GAME</a>
-            </div>
-        </div>
     </main>
 
-    <!-- --- JavaScript --- -->
-    <script>
-        function toggleTheme() {
-            const currentTheme = document.body.getAttribute('data-theme');
-            const themeIcon = document.getElementById('theme-icon');
-            const themeText = document.getElementById('theme-text');
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, query, where, getDocs, doc, deleteDoc, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-            if (currentTheme === 'light') {
-                document.body.removeAttribute('data-theme');
-                themeIcon.innerText = '☀️';
-                themeText.innerText = 'Light Mode';
-            } else {
-                document.body.setAttribute('data-theme', 'light');
-                themeIcon.innerText = '🌙';
-                themeText.innerText = 'Dark Mode';
+        // 🔥 เอา Firebase Config ของคุณมาวางตรงนี้ให้ถูกต้องเหมือนหน้าแรก
+        const firebaseConfig = {
+  apiKey: "AIzaSyB-v9u49UfZ0CBt8bYQoFMCB6QuqLxspZk",
+  authDomain: "download-hub-e940e.firebaseapp.com",
+  databaseURL: "https://download-hub-e940e-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "download-hub-e940e",
+  storageBucket: "download-hub-e940e.firebasestorage.app",
+  messagingSenderId: "950263847548",
+  appId: "1:950263847548:web:809b1c61e1628303bb87f9",
+  measurementId: "G-TWQJELXBWM"
+};
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // 💡 จุดที่ 2: ระบุหมวดหมู่ของหน้านั้นๆ ('adobe', 'games', หรือ 'etc')
+        const currentCategory = 'games'; 
+
+        // 🌟 ฟังก์ชันดึงข้อมูลมาแสดงผล (Dynamic Render)
+        async function renderItems() {
+            const grid = document.getElementById('dataGrid');
+            if (!grid) return;
+            
+            const isLatestAdmin = sessionStorage.getItem('role') === 'admin';
+
+            try {
+                const q = query(collection(db, "portalItems"), where("category", "==", currentCategory), orderBy("createdAt", "asc"));
+                const querySnapshot = await getDocs(q);
+                
+                if (querySnapshot.empty) {
+                    grid.innerHTML = `<p style="color:var(--text-sub); text-align:center; grid-column:1/-1; padding:40px;">ไม่มีข้อมูลรายการในหมวดหมู่นี้ กรุณาเข้าเพิ่มข้อมูลในหน้าแอดมิน</p>`;
+                    return;
+                }
+
+                let htmlContent = '';
+                querySnapshot.forEach((docSnap) => {
+                    const item = docSnap.data();
+                    const docId = docSnap.id;
+
+                    htmlContent += `
+                        <div class="shortcut-card">
+                            <div>
+                                <div class="card-header" onclick="toggleCard(this)">
+                                    <div class="app-title"><span class="dot ${item.dotClass}"></span> ${item.title}</div>
+                                    <span class="toggle-icon">▼ ดีเทล</span>
+                                </div>
+                                <div class="app-details">
+                                    <p>${item.details}</p>
+                                    ${item.accountInfo ? `<p>__________________________________________________</p><p style="margin-top:8px;">${item.accountInfo}</p>` : ''}
+                                    <img src="${item.imgUrl}" alt="${item.title}" class="app-preview-img">
+                                </div>
+                            </div>
+                            <a href="${item.downloadUrl}" target="_blank" class="btn-link">${item.btnText}</a>
+                            ${isLatestAdmin ? `<button class="btn-delete" onclick="deleteItem('${docId}')">🗑️ ลบรายการนี้</button>` : ''}
+                        </div>
+                    `;
+                });
+                
+                grid.innerHTML = htmlContent;
+            } catch (error) {
+                console.error("Error: ", error);
+                grid.innerHTML = `<p style="color:red; text-align:center; grid-column:1/-1;">เกิดข้อผิดพลาดในการดึงข้อมูลจากฐานข้อมูลคลาวด์</p>`;
             }
         }
 
-        function logout() {
+        // 🌟 ผูกฟังก์ชันเข้ากับ window เพื่อให้ HTML ฝั่งปุ่มกดสามารถมองเห็นและเรียกใช้ได้
+        window.toggleCard = function(headerElement) {
+            headerElement.closest('.shortcut-card').classList.toggle('active');
+        }
+
+        window.deleteItem = async function(id) {
+            if (confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้ออกจาก Firebase?')) {
+                try {
+                    await deleteDoc(doc(db, "portalItems", id));
+                    alert('ลบรายการสำเร็จแล้วครับ!');
+                    renderItems();
+                } catch (error) {
+                    alert('ไม่สามารถลบข้อมูลได้: ' + error.message);
+                }
+            }
+        }
+
+        window.toggleTheme = function() {
+            const currentTheme = document.body.getAttribute('data-theme');
+            const themeIcon = document.getElementById('theme-icon');
+            const themeText = document.getElementById('theme-text');
+            if (currentTheme === 'light') {
+                document.body.removeAttribute('data-theme');
+                themeIcon.innerText = '☀️'; themeText.innerText = 'Light Mode';
+            } else {
+                document.body.setAttribute('data-theme', 'light');
+                themeIcon.innerText = '🌙'; themeText.innerText = 'Dark Mode';
+            }
+        }
+
+        window.logout = function() { 
             sessionStorage.clear(); 
             window.location.href = 'index.html'; 
         }
 
-        // ฟังก์ชันเปิด-ปิด ดีเทลพร้อมแสดงภาพหน้าปก
-        function toggleCard(headerElement) {
-            const card = headerElement.closest('.shortcut-card');
-            card.classList.toggle('active');
+        // ⚙️ ตรวจสอบสิทธิ์แอดมิน เพื่อแสดงลิ้งก์ไปหน้าแอดมินบนเมนูด้านข้าง
+        if (sessionStorage.getItem('role') === 'admin') {
+            const sidebarMenu = document.querySelector('.sidebar-menu');
+            if (sidebarMenu) {
+                const adminLink = document.createElement('a');
+                adminLink.href = 'admin.html';
+                adminLink.className = 'sidebar-link';
+                adminLink.innerHTML = `<li class="sidebar-item" style="border: 1px dashed var(--gold); color: var(--gold);">⚙️ หน้าแอดมินอัปโหลด</li>`;
+                sidebarMenu.appendChild(adminLink);
+            }
         }
+
+        // เรียกใช้งานฟังก์ชันดึงข้อมูลทันทีเมื่อโหลดหน้าเว็บสำเร็จ
+        document.addEventListener('DOMContentLoaded', renderItems);
     </script>
 </body>
 </html>

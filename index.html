@@ -3,154 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>เข้าสู่ระบบ | Premium Access</title>
+    <title>Login | Workspace Portal</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
         body {
-            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
+            background: #0a0a0a;
             color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            overflow: hidden;
+            margin: 0;
         }
-
-        .login-container {
-            background: rgba(25, 25, 25, 0.85);
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 15px rgba(212, 175, 55, 0.1);
+        .login-card {
+            background: linear-gradient(145deg, #111111, #1a1a1a);
             border: 1px solid rgba(212, 175, 55, 0.2);
+            padding: 40px;
+            border-radius: 16px;
             width: 100%;
             max-width: 400px;
-            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.05);
+        }
+        h2 {
+            color: #d4af37;
             text-align: center;
+            margin-bottom: 30px;
+            letter-spacing: 1px;
         }
-
-        .login-container h2 {
-            color: #d4af37; /* Gold */
-            font-size: 2rem;
-            margin-bottom: 25px;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            text-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
-        }
-
-        .input-group {
+        .form-group {
             margin-bottom: 20px;
-            text-align: left;
         }
-
-        .input-group label {
+        label {
             display: block;
-            color: #baa055;
             margin-bottom: 8px;
+            color: #aaa;
             font-size: 0.9rem;
         }
-
-        .input-group input {
+        input {
             width: 100%;
-            padding: 12px 15px;
+            padding: 12px;
             background: #222;
-            border: 1px solid #444;
+            border: 1px solid rgba(212, 175, 55, 0.2);
             border-radius: 8px;
             color: #fff;
             font-size: 1rem;
-            transition: all 0.3s ease;
+            box-sizing: border-box;
+            transition: 0.3s;
         }
-
-        .input-group input:focus {
+        input:focus {
             border-color: #d4af37;
             outline: none;
-            box-shadow: 0 0 8px rgba(212, 175, 55, 0.4);
-            background: #2a2a2a;
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.2);
         }
-
-        /* ลูกเล่นปุ่มกด Login */
         .btn-login {
             width: 100%;
-            padding: 13px;
-            background: linear-gradient(45deg, #af8f2c, #f3e09b, #d4af37);
-            background-size: 200% auto;
+            padding: 14px;
+            background: #d4af37;
+            color: #111;
             border: none;
             border-radius: 8px;
-            color: #111;
-            font-size: 1.1rem;
             font-weight: bold;
+            font-size: 1rem;
             cursor: pointer;
-            transition: all 0.4s ease;
-            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
-            position: relative;
-            overflow: hidden;
+            transition: 0.3s;
+            margin-top: 10px;
         }
-
         .btn-login:hover {
-            background-position: right center; /* เลื่อนสี Gradient */
-            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.5);
-            transform: translateY(-2px);
-        }
-
-        .btn-login:active {
-            transform: translateY(1px);
-            box-shadow: 0 3px 10px rgba(212, 175, 55, 0.4);
-        }
-
-        /* ข้อความแจ้งเตือนเมื่อรหัสผิด */
-        .error-msg {
-            color: #ff4d4d;
-            font-size: 0.9rem;
-            margin-top: 15px;
-            display: none;
+            background: #af8f2c;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
         }
     </style>
 </head>
 <body>
 
-    <div class="login-container">
-        <h2>Sign In</h2>
-        <form id="loginForm">
-            <div class="input-group">
-                <label for="username">Username</label>
-                <input type="text" id="username" placeholder="ระบุชื่อผู้ใช้" required>
+    <div class="login-card">
+        <h2>PORTAL LOGIN</h2>
+        <form onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" id="email" required placeholder="เช่น admin@portal.com">
             </div>
-            <div class="input-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" placeholder="ระบุรหัสผ่าน" required>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="password" required placeholder="กรอกรหัสผ่าน">
             </div>
-            <button type="submit" class="btn-login">LOG IN</button>
-            <div class="error-msg" id="errorMsg">Username หรือ Password ไม่ถูกต้อง!</div>
+            <button type="submit" class="btn-login">เข้าสู่ระบบ</button>
         </form>
     </div>
 
-    <script>
-    document.getElementById('loginForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const user = document.getElementById('username').value;
-        const pass = document.getElementById('password').value;
-        const errorMsg = document.getElementById('errorMsg');
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-        // ตรวจสอบเงื่อนไข Username และ Password
-        if (user === 'Thanpisit' && pass === 'Wongjaisak') {
-            errorMsg.style.display = 'none';
-            
-            // 🔥 เพิ่มคำสั่งนี้: บันทึกสถานะการ Login ไว้ใน sessionStorage (จะหายไปเมื่อปิดแท็บ/เบราว์เซอร์)
-            sessionStorage.setItem('isLoggedIn', 'true');
-            sessionStorage.setItem('currentUser', user); // บันทึกชื่อไว้ไปแสดงหน้าสองได้ด้วย
+        // 🔥 กรุณาตรวจสอบและใช้ข้อมูล Config ของคุณที่ได้มาจาก Firebase Console ตรงนี้ครับ
+        const firebaseConfig = {
+  apiKey: "AIzaSyB-v9u49UfZ0CBt8bYQoFMCB6QuqLxspZk",
+  authDomain: "download-hub-e940e.firebaseapp.com",
+  databaseURL: "https://download-hub-e940e-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "download-hub-e940e",
+  storageBucket: "download-hub-e940e.firebasestorage.app",
+  messagingSenderId: "950263847548",
+  appId: "1:950263847548:web:809b1c61e1628303bb87f9",
+  measurementId: "G-TWQJELXBWM"
+};
 
-            // ส่งไปยังหน้า dashboard.html
-            window.location.href = 'dashboard.html';
-        } else {
-            errorMsg.style.display = 'block';
+        // เริ่มต้นระบุตัวตน Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        // 🌟 ประกาศฟังก์ชันไว้ที่ window เพื่อให้แท็ก <form> ด้านบนกดเรียกใช้งานได้
+        window.handleLogin = function(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value.trim();
+            const pass = document.getElementById('password').value.trim();
+
+            signInWithEmailAndPassword(auth, email, pass)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    
+                    sessionStorage.setItem('isLoggedIn', 'true');
+                    sessionStorage.setItem('username', user.email.split('@')[0]); 
+                    
+                    // เช็กสิทธิ์การใช้งานจากชื่ออีเมล
+                    if (user.email.startsWith('admin')) {
+                        sessionStorage.setItem('role', 'admin');
+                    } else {
+                        sessionStorage.setItem('role', 'user');
+                    }
+                    
+                    window.location.href = 'dashboard.html';
+                })
+                .catch((error) => {
+                    console.error("Login Error: ", error);
+                    alert('อีเมลหรือรหัสผ่านไม่ถูกต้อง หรือเกิดข้อผิดพลาด: ' + error.message);
+                });
         }
-    });
-</script>
+    </script>
 </body>
 </html>

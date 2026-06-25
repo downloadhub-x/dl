@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | Workspace Portal</title>
+    <script>
+        // ป้องกันความปลอดภัยขั้นแรกที่หน้าบ้าน
+        if (sessionStorage.getItem('isLoggedIn') !== 'true' || sessionStorage.getItem('role') !== 'admin') {
+            alert('พื้นที่นี้เฉพาะผู้ดูแลระบบเท่านั้นครับ!');
+            window.location.href = 'dashboard.html';
+        }
+    </script>
+    <style>
+        body { background: #0a0a0a; color: #fff; font-family: 'Segoe UI', sans-serif; padding: 40px; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .admin-container { width: 100%; max-width: 600px; background: #111; padding: 35px; border-radius: 16px; border: 1px solid #d4af37; box-shadow: 0 0 20px rgba(212, 175, 55, 0.1); }
+        h1 { color: #d4af37; margin-bottom: 25px; text-align: center; font-size: 1.8rem; letter-spacing: 1px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .form-group { margin-bottom: 18px; display: flex; flex-direction: column; }
+        .form-group.full { grid-column: span 2; }
+        label { margin-bottom: 6px; color: #aaa; font-size: 0.9rem; }
+        input, select, textarea { padding: 12px; background: #1a1a1a; border: 1px solid rgba(212,175,55,0.2); border-radius: 8px; color: #fff; font-size: 1rem; }
+        input:focus, select:focus, textarea:focus { border-color: #d4af37; outline: none; }
+        .btn-submit { background: #d4af37; color: #111; padding: 14px; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; margin-top: 10px; transition: 0.3s; width: 100%; }
+        .btn-submit:hover { background: #af8f2c; box-shadow: 0 0 15px rgba(212,175,55,0.3); }
+        .btn-back { display: block; text-align: center; color: #aaa; margin-top: 20px; text-decoration: none; font-size: 0.95rem; transition: color 0.3s; }
+        .btn-back:hover { color: #d4af37; }
+    </style>
+</head>
+<body>
+
+    <div class="admin-container">
+        <h1>⚙️ CONTROL & UPLOAD PANEL</h1>
+        <form id="uploadForm">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>เลือกหมวดหมู่หน้าเว็บ (Category)</label>
+                    <select id="category" required>
+                        <option value="adobe">🎨 หมวดหมู่ Adobe</option>
+                        <option value="games">🎮 หมวดหมู่ Games</option>
+                        <option value="etc">📂 หมวดหมู่ ETC.</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>สีของจุดสถานะ (Dot Color)</label>
+                    <select id="dotClass">
+                        <option value="dot-ps">🔵 สีฟ้า (Photoshop/Chrome)</option>
+                        <option value="dot-pr">🟣 สีชมพู (Premiere/Discord)</option>
+                        <option value="dot-ai">🟠 สีส้ม (Illustrator/OBS)</option>
+                        <option value="dot-ae">🔮 สีน้ำเงิน (After Effects)</option>
+                        <option value="dot-g2">🟢 สีเขียวมิ้นต์ (Cyberpunk)</option>
+                        <option value="dot-g5">🟢 สีเขียวสว่าง (Minecraft/Spotify)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group full">
+                <label>ชื่อตัวโปรแกรม หรือ ชื่อเกมส์</label>
+                <input type="text" id="title" placeholder="ตัวอย่าง: Adobe Photoshop 2025" required>
+            </div>
+
+            <div class="form-group full">
+                <label>คำอธิบายรายละเอียดระบบ (Details)</label>
+                <textarea id="details" rows="3" placeholder="กรอกข้อมูลดีเทล คำอธิบาย หรือสเปกข้อมูลขั้นต่ำ..." required></textarea>
+            </div>
+
+            <div class="form-group full">
+                <label>ข้อมูลบัญชี / รหัสผ่านล็อกไฟล์ (ระบุหรือไม่ก็ได้)</label>
+                <input type="text" id="accountInfo" placeholder="ตัวอย่าง: Password : T070844@Photoshop">
+            </div>
+
+            <div class="form-group full">
+                <label>ลิงก์ URL รูปภาพพรีวิวหน้าปก</label>
+                <input type="url" id="imgUrl" placeholder="https://images.unsplash.com/..." required>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>ลิงก์ดาวน์โหลดเว็บปลายทาง</label>
+                    <input type="url" id="downloadUrl" placeholder="https://www.mediafire.com/..." required>
+                </div>
+                <div class="form-group">
+                    <label>ข้อความระบุบนปุ่มกด</label>
+                    <input type="text" id="btnText" value="DOWNLOAD" required>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-submit">🚀 บันทึกและส่งข้อมูลขึ้นระบบ</button>
+        </form>
+        <a href="dashboard.html" class="btn-back">⬅️ กลับไปหน้าหลัก Dashboard</a>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // 🔥 เอา Firebase Config ของคุณมาวางตรงนี้ให้ถูกต้องเหมือนทุกๆ หน้าครับ
+        const firebaseConfig = {
+  apiKey: "AIzaSyB-v9u49UfZ0CBt8bYQoFMCB6QuqLxspZk",
+  authDomain: "download-hub-e940e.firebaseapp.com",
+  databaseURL: "https://download-hub-e940e-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "download-hub-e940e",
+  storageBucket: "download-hub-e940e.firebasestorage.app",
+  messagingSenderId: "950263847548",
+  appId: "1:950263847548:web:809b1c61e1628303bb87f9",
+  measurementId: "G-TWQJELXBWM"
+};
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // ดักจับการทำงานเมื่อฟอร์มกด Submit
+        const form = document.getElementById('uploadForm');
+        if (form) {
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                const newItem = {
+                    createdAt: Date.now(), // ใช้สำหรับดึงมาจัดเรียงลำดับก่อนหลัง
+                    category: document.getElementById('category').value,
+                    title: document.getElementById('title').value.trim(),
+                    dotClass: document.getElementById('dotClass').value,
+                    details: document.getElementById('details').value.trim(),
+                    accountInfo: document.getElementById('accountInfo').value.trim(),
+                    imgUrl: document.getElementById('imgUrl').value.trim(),
+                    downloadUrl: document.getElementById('downloadUrl').value.trim(),
+                    btnText: document.getElementById('btnText').value.trim()
+                };
+
+                try {
+                    // ส่งขึ้นคอลเลกชันฐานข้อมูล Firebase ทันที
+                    await addDoc(collection(db, "portalItems"), newItem);
+                    alert('🚀 อัปโหลดข้อมูลลงคลาวด์ Firebase Database สำเร็จเรียบร้อยครับ!');
+                    form.reset(); // ล้างฟอร์มให้ว่าง
+                } catch (error) {
+                    console.error("Upload Error: ", error);
+                    alert('เกิดข้อผิดพลาดในการส่งข้อมูล: ' + error.message);
+                }
+            });
+        }
+    </script>
+</body>
+</html>
