@@ -91,12 +91,14 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        // Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
 
-        // 🔥 ตรวจสอบให้มั่นใจว่าคัดลอกก้อน Config จาก Firebase Console มาวางตรงนี้ครบถ้วน
-        
-
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyB-v9u49UfZ0CBt8bYQoFMCB6QuqLxspZk",
   authDomain: "download-hub-e940e.firebaseapp.com",
@@ -104,13 +106,13 @@ const firebaseConfig = {
   projectId: "download-hub-e940e",
   storageBucket: "download-hub-e940e.firebasestorage.app",
   messagingSenderId: "950263847548",
-  appId: "1:950263847548:web:809b1c61e1628303bb87f9",
-  measurementId: "G-TWQJELXBWM"
+  appId: "1:950263847548:web:390c5d2932aac312bb87f9",
+  measurementId: "G-46FQ8MGH9B"
 };
 
-        // เริ่มต้นเชื่อมต่อฐานข้อมูล
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 
         // ผูกฟังก์ชันเข้ากับ window เพื่อแก้ปัญหา Scope ของโค้ดแบบ Module พังหน้าบ้าน
         window.saveDataToFirebase = async function(e) {
