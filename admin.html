@@ -77,7 +77,7 @@
             </div>
 
             <div class="form-group full">
-                <label>เลือกไฟล์รูปภาพพรีวิวหน้าปก (ดึงตรงจากคอม/มือถือ)</label>
+                <label>เลือกไฟล์รูปภาพพรีวิวหน้าปก (ใส่หรือไม่ใส่ก็ได้)</label>
                 <input type="file" id="imgFile" accept="image/*" onchange="previewAndConvertImage(event)">
                 <div class="preview-box" id="previewContainer">
                     <p style="font-size: 0.8rem; color:#aaa; margin: 5px 0;">รูปภาพพรีวิวที่จะแสดงบนหน้าเว็บ:</p>
@@ -118,21 +118,21 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        let globalBase64Str = ""; // ตัวแปรเก็บรหัสข้อความรูปภาพ
+        let globalBase64Str = ""; 
+        // ลิงก์รูปภาพมาตรฐาน (Default Image) คุมโทนเว็บดาร์กทอง ถ้าน้าไม่ใส่รูปภาพ ระบบจะดึงรูปนี้ไปแปะให้เองครับ
+        const defaultPlaceholderImg = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600&auto=format&fit=crop";
 
-        // ฟังก์ชันอ่านไฟล์รูปจากคอมแล้วแปลงเป็นข้อความ Base64 ทันที โดยไม่ต้องอัปโหลดเข้า Storage
         window.previewAndConvertImage = function(event) {
             const file = event.target.files[0];
             if (!file) return;
 
-            // 💡 แนะนำให้ใช้รูปขนาดไม่ใหญ่จนเกินไป (แนะนำต่ำกว่า 1MB-2MB) เพื่อป้องกันฐานข้อมูลเต็มครับน้า
             if (file.size > 2 * 1024 * 1024) {
                 Swal.fire({ icon: 'warning', title: 'ไฟล์มีขนาดใหญ่เกินไป', text: 'แนะนำให้ใช้รูปพรีวิวขนาดไม่เกิน 2MB เพื่อความรวดเร็วในการโหลดหน้าเว็บครับน้า', background: '#111', color: '#fff', confirmButtonColor: '#d4af37' });
             }
 
             const reader = new FileReader();
             reader.onload = function() {
-                globalBase64Str = reader.result; // ได้ข้อความภาพรหัส Base64
+                globalBase64Str = reader.result; 
                 const output = document.getElementById('imageRender');
                 output.src = globalBase64Str;
                 document.getElementById('previewContainer').style.display = 'block';
@@ -140,7 +140,6 @@
             reader.readAsDataURL(file);
         }
 
-        // โหลดข้อมูลเก่ามาแสดงในกรณีที่กด Edit ข้ามมาจากหน้าแสดงผล
         document.addEventListener('DOMContentLoaded', async () => {
             const urlParams = new URLSearchParams(window.location.search);
             const editId = urlParams.get('edit');
@@ -168,7 +167,7 @@
                         if(item.imgUrl) {
                             document.getElementById('imageRender').src = item.imgUrl;
                             document.getElementById('previewContainer').style.display = 'block';
-                            globalBase64Str = item.imgUrl; // จำภาพเก่าไว้ถ้าแอดมินไม่ได้เปลี่ยนรูปใหม่
+                            globalBase64Str = item.imgUrl; 
                         }
                     }
                 } catch (e) {
@@ -177,18 +176,14 @@
             }
         });
 
-        // ฟังก์ชันกดปุ่มเซฟ/อัปเดตข้อมูล
         window.saveDataToFirebase = async function(e) {
             e.preventDefault();
             
             const editId = document.getElementById('editDocId').value;
             const existingImg = document.getElementById('existingImgBase64').value;
-            const finalImgUrl = globalBase64Str || existingImg;
-
-            if (!finalImgUrl) {
-                Swal.fire({ icon: 'warning', title: 'แจ้งเตือน', text: 'กรุณาเลือกอัปโหลดรูปภาพจากในเครื่องก่อนครับน้า', background: '#111', color: '#fff', confirmButtonColor: '#d4af37' });
-                return;
-            }
+            
+            // ตรรกะใหม่: เลือกรูปใหม่ -> ถ้าไม่มีให้เลือกรูปเก่าที่เคย edit ไว้ -> ถ้าเพิ่มใหม่แล้วไม่เลือกอะไรเลย ให้ใช้รูป Default แดนเนรมิตแทน
+            const finalImgUrl = globalBase64Str || existingImg || defaultPlaceholderImg;
 
             Swal.fire({
                 title: 'กำลังบันทึกข้อมูล...',
@@ -205,18 +200,16 @@
                     dotClass: document.getElementById('dotClass').value,
                     details: document.getElementById('details').value.trim(),
                     accountInfo: document.getElementById('accountInfo').value.trim(),
-                    imgUrl: finalImgUrl, // เก็บเป็นข้อความยาวของ Base64
+                    imgUrl: finalImgUrl, 
                     downloadUrl: document.getElementById('downloadUrl').value.trim(),
                     btnText: document.getElementById('btnText').value.trim()
                 };
 
                 if (editId) {
-                    // ทำการอัปเดตข้อมูลการ์ดใบเดิม
                     await updateDoc(doc(db, "portalItems", editId), portalData);
                     Swal.fire({ icon: 'success', title: 'อัปเดตสำเร็จ! 🎉', text: 'แก้ไขข้อมูลบนคลาวด์เรียบร้อยแล้วครับ', background: '#111', color: '#fff', confirmButtonColor: '#d4af37' })
                     .then(() => { window.location.href = 'dashboard.html'; });
                 } else {
-                    // ทำการเพิ่มข้อมูลการ์ดใบใหม่
                     portalData.createdAt = Date.now();
                     await addDoc(collection(db, "portalItems"), portalData);
                     Swal.fire({ icon: 'success', title: 'อัปโหลดสำเร็จ! 🚀', text: 'เพิ่มข้อมูลการ์ดใบใหม่ลงระบบคลาวด์เรียบร้อยครับ!', background: '#111', color: '#fff', confirmButtonColor: '#d4af37' });
