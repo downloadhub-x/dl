@@ -4,9 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel | Workspace Portal</title>
+    <!-- เพิ่มสคริปต์ SweetAlert2 สำหรับหน้าต่างป๊อปอัพสุดแจ่ม -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         if (sessionStorage.getItem('isLoggedIn') !== 'true' || sessionStorage.getItem('role') !== 'admin') {
-            alert('พื้นที่นี้เฉพาะผู้ดูแลระบบเท่านั้นครับ!');
             window.location.href = 'dashboard.html';
         }
     </script>
@@ -24,14 +25,22 @@
         .btn-submit:hover { background: #af8f2c; box-shadow: 0 0 15px rgba(212,175,55,0.3); }
         .btn-back { display: block; text-align: center; color: #aaa; margin-top: 20px; text-decoration: none; font-size: 0.95rem; transition: color 0.3s; }
         .btn-back:hover { color: #d4af37; }
+        .preview-box { margin-top: 10px; display: none; text-align: center; }
+        .preview-box img { max-width: 100%; max-height: 150px; border-radius: 8px; border: 1px solid rgba(212,175,55,0.3); }
+        .edit-banner { background: #af8f2c; color: #111; padding: 8px; border-radius: 6px; font-weight: bold; text-align: center; margin-bottom: 15px; display: none; }
     </style>
 </head>
 <body>
 
     <div class="admin-container">
-        <h1>⚙️ CONTROL & UPLOAD PANEL</h1>
+        <div id="editBanner" class="edit-banner">✏️ กำลังอยู่ในโหมด: แก้ไขข้อมูลรายการ</div>
+        <h1 id="panelTitle">⚙️ CONTROL & UPLOAD PANEL</h1>
         
         <form onsubmit="saveDataToFirebase(event)">
+            <!-- ซ่อน ID สำหรับการกดแก้ไขข้อมูลไว้ -->
+            <input type="hidden" id="editDocId" value="">
+            <input type="hidden" id="existingImgUrl" value="">
+
             <div class="form-row">
                 <div class="form-group">
                     <label>เลือกหมวดหมู่หน้าเว็บ (Category)</label>
@@ -70,8 +79,13 @@
             </div>
 
             <div class="form-group full">
-                <label>ลิงก์ URL รูปภาพพรีวิวหน้าปก</label>
-                <input type="url" id="imgUrl" placeholder="https://images.unsplash.com/..." required>
+                <label>เลือกไฟล์รูปภาพพรีวิวหน้าปก (อัปโหลดตรงจากเครื่อง)</label>
+                <!-- ปรับให้รองรับไฟล์รูปตรงๆ ไม่ต้องใช้ ลิงก์ URL -->
+                <input type="file" id="imgFile" accept="image/*" onchange="previewImage(event)">
+                <div class="preview-box" id="previewContainer">
+                    <p style="font-size: 0.8rem; color:#aaa; margin: 5px 0;">รูปภาพที่จะถูกเปิดแสดง:</p>
+                    <img id="imageRender" src="" alt="Preview">
+                </div>
             </div>
 
             <div class="form-row">
@@ -85,63 +99,157 @@
                 </div>
             </div>
 
-            <button type="submit" class="btn-submit">🚀 บันทึกและส่งข้อมูลขึ้นระบบ</button>
+            <button type="submit" id="btnSubmit" class="btn-submit">🚀 บันทึกและส่งข้อมูลขึ้นระบบ</button>
         </form>
         <a href="dashboard.html" class="btn-back">⬅️ กลับไปหน้าหลัก Dashboard</a>
     </div>
 
-            <script type="module">
+    <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
-        // ⚠️ ขั้นตอนสำคัญ: วางคีย์โปรเจกต์ใหม่ของคุณตรงนี้ให้ครบถ้วนนะครับ
         const firebaseConfig = {
-  apiKey: "AIzaSyB-v9u49UfZ0CBt8bYQoFMCB6QuqLxspZk",
-  authDomain: "download-hub-e940e.firebaseapp.com",
-  databaseURL: "https://download-hub-e940e-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "download-hub-e940e",
-  storageBucket: "download-hub-e940e.firebasestorage.app",
-  messagingSenderId: "950263847548",
-  appId: "1:950263847548:web:390c5d2932aac312bb87f9",
-  measurementId: "G-46FQ8MGH9B"
-};
+            apiKey: "AIzaSyB-v9u49UfZ0CBt8bYQoFMCB6QuqLxspZk",
+            authDomain: "download-hub-e940e.firebaseapp.com",
+            databaseURL: "https://download-hub-e940e-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "download-hub-e940e",
+            storageBucket: "download-hub-e940e.firebasestorage.app",
+            messagingSenderId: "950263847548",
+            appId: "1:950263847548:web:390c5d2932aac312bb87f9",
+            measurementId: "G-46FQ8MGH9B"
+        };
 
-        // เริ่มต้นระบบเชื่อมต่อ
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const storage = getStorage(app); // สตาร์ทระบบ Storage สำหรับเก็บไฟล์ภาพ
 
-        // ผูกฟังก์ชันเข้ากับ window เพื่อให้ฟอร์มด้านบนมองเห็น
-        window.saveDataToFirebase = async function(e) {
-            e.preventDefault(); // สั่งเบราว์เซอร์ห้ามรีเฟรชหน้าเว็บเองเด็ดขาด
+        // ฟังก์ชัน Render รูปภาพก่อนการอัปโหลดจริง
+        window.previewImage = function(event) {
+            const reader = new FileReader();
+            reader.onload = function() {
+                const output = document.getElementById('imageRender');
+                output.src = reader.result;
+                document.getElementById('previewContainer').style.display = 'block';
+            };
+            if(event.target.files[0]) {
+                reader.readAsDataURL(event.target.files[0]);
+            }
+        }
+
+        // เช็กสิทธิ์แอดมินกรณีส่งข้อมูล Edit ข้ามมาจากหน้าแสดงผล
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const editId = urlParams.get('edit');
             
-            alert("ระบบกำลังเตรียมส่งข้อมูลไปที่ Firebase..."); 
+            if (editId) {
+                document.getElementById('editDocId').value = editId;
+                document.getElementById('panelTitle').innerText = '✏️ EDIT PORTAL DATA';
+                document.getElementById('btnSubmit').innerText = '💾 อัปเดตการแก้ไขข้อมูล';
+                document.getElementById('editBanner').style.display = 'block';
+                
+                // ดึงข้อมูลอันเก่าใน Firebase มารอแสดงบนช่องกรอกข้อมูล
+                try {
+                    const docRef = doc(db, "portalItems", editId);
+                    const docSnap = await getDoc(docRef);
+                    if (docSnap.exists()) {
+                        const item = docSnap.data();
+                        document.getElementById('category').value = item.category;
+                        document.getElementById('dotClass').value = item.dotClass;
+                        document.getElementById('title').value = item.title;
+                        document.getElementById('details').value = item.details;
+                        document.getElementById('accountInfo').value = item.accountInfo || '';
+                        document.getElementById('downloadUrl').value = item.downloadUrl;
+                        document.getElementById('btnText').value = item.btnText;
+                        document.getElementById('existingImgUrl').value = item.imgUrl;
+                        
+                        if(item.imgUrl) {
+                            document.getElementById('imageRender').src = item.imgUrl;
+                            document.getElementById('previewContainer').style.display = 'block';
+                        }
+                    }
+                } catch (e) {
+                    Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: 'ดึงข้อมูลเดิมไม่สำเร็จ: ' + e.message, background: '#111', color: '#fff', confirmButtonColor: '#d4af37' });
+                }
+            }
+        });
+
+        // จัดการและรวมคำสั่งบันทึก / อัปเดตข้อมูลขึ้นระบบคลาวด์
+        window.saveDataToFirebase = async function(e) {
+            e.preventDefault();
+            
+            // เปิดหน้าต่างแจ้งเตือนกำลังโหลดแบบหรูหราห้ามคลิกปิด
+            Swal.fire({
+                title: 'กำลังบันทึกข้อมูล...',
+                text: 'กรุณารอสักครู่ ระบบกำลังอัปโหลดข้อมูลภาพและข้อความขึ้นระบบ',
+                background: '#111',
+                color: '#fff',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            const fileInput = document.getElementById('imgFile');
+            const editId = document.getElementById('editDocId').value;
+            let finalImgUrl = document.getElementById('existingImgUrl').value;
 
             try {
-                const newItem = {
-                    createdAt: Date.now(),
+                // กรณีผู้ใช้เลือกไฟล์ภาพใหม่เข้ามาตรงๆ
+                if (fileInput.files.length > 0) {
+                    const file = fileInput.files[0];
+                    const storageRef = ref(storage, 'portal_images/' + Date.now() + '_' + file.name);
+                    const snapshot = await uploadBytes(storageRef, file);
+                    finalImgUrl = await getDownloadURL(snapshot.ref);
+                } else if (!editId && fileInput.files.length === 0) {
+                    // หากเป็นการเพิ่มใหม่ แต่ลืมเลือกภาพ
+                    Swal.fire({ icon: 'warning', title: 'แจ้งเตือน', text: 'กรุณาอัปโหลดรูปภาพตัวอย่างหน้าปกก่อนครับ', background: '#111', color: '#fff', confirmButtonColor: '#d4af37' });
+                    return;
+                }
+
+                const portalData = {
                     category: document.getElementById('category').value,
                     title: document.getElementById('title').value.trim(),
                     dotClass: document.getElementById('dotClass').value,
                     details: document.getElementById('details').value.trim(),
                     accountInfo: document.getElementById('accountInfo').value.trim(),
-                    imgUrl: document.getElementById('imgUrl').value.trim(),
+                    imgUrl: finalImgUrl,
                     downloadUrl: document.getElementById('downloadUrl').value.trim(),
                     btnText: document.getElementById('btnText').value.trim()
                 };
 
-                // ส่งข้อมูลเข้า Collection บนฐานข้อมูลใหม่
-                await addDoc(collection(db, "portalItems"), newItem);
-                
-                alert('🚀 อัปโหลดข้อมูลลงคลาวด์ Firebase Database สำเร็จเรียบร้อยครับ!');
-                e.target.reset(); // เมื่อสำเร็จจริงค่อยล้างข้อมูลในฟอร์มออก
+                if (editId) {
+                    // โหมดแก้ไข: ปรับปรุงโครงสร้างข้อมูลชุดเดิม
+                    await updateDoc(doc(db, "portalItems", editId), portalData);
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'อัปเดตสำเร็จ! 🎉',
+                        text: 'แก้ไขข้อมูลลงระบบคลาวด์เรียบร้อยแล้ว',
+                        background: '#111',
+                        color: '#fff',
+                        confirmButtonColor: '#d4af37'
+                    }).then(() => {
+                        window.location.href = 'dashboard.html';
+                    });
+                } else {
+                    // โหมดเพิ่มใหม่: แอดข้อมูลลงคลังข้อมูลใบใหม่
+                    portalData.createdAt = Date.now();
+                    await addDoc(collection(db, "portalItems"), portalData);
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'อัปโหลดสำเร็จ! 🚀',
+                        text: 'นำข้อมูลใหม่ขึ้น Firebase Server เรียบร้อยแล้ว',
+                        background: '#111',
+                        color: '#fff',
+                        confirmButtonColor: '#d4af37'
+                    });
+                    e.target.reset();
+                    document.getElementById('previewContainer').style.display = 'none';
+                }
                 
             } catch (error) {
-                console.error("Firebase Connect Error: ", error);
-                alert('❌ เกิดข้อผิดพลาดฝั่ง Firebase: ' + error.message);
+                console.error("Firebase Process Error: ", error);
+                Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: error.message, background: '#111', color: '#fff', confirmButtonColor: '#d4af37' });
             }
         }
     </script>
-
-
 </body>
 </html>

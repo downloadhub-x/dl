@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Workspace Portal</title>
+    <!-- โหลด SweetAlert2 ป๊อปอัพสีดาร์กคุมโทนคอมเกมมิ่ง -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         if (sessionStorage.getItem('isLoggedIn') !== 'true') { window.location.href = 'index.html'; }
     </script>
@@ -60,7 +62,10 @@
         .btn-link { display: block; text-align: center; padding: 12px; background: transparent; color: var(--gold); border: 2px solid var(--gold); border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.95rem; transition: all 0.3s; margin-top: 15px; }
         .btn-link:hover { background: var(--gold-hover); color: #111; box-shadow: 0 0 15px var(--shadow); }
         
-        .btn-delete { background: #ff4d4d; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 12px; font-size: 0.85rem; width: fit-content; align-self: flex-end; }
+        .admin-action-row { display: flex; justify-content: flex-end; gap: 10px; margin-top: 12px; }
+        .btn-edit { background: #d4af37; color: #111; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.85rem; }
+        .btn-edit:hover { background: #af8f2c; }
+        .btn-delete { background: #ff4d4d; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.85rem; }
         .btn-delete:hover { background: #cc3333; }
     </style>
 </head>
@@ -71,7 +76,7 @@
         <ul class="sidebar-menu">
             <a href="dashboard.html" class="sidebar-link"><li class="sidebar-item">🏠 หน้าหลัก</li></a>
             <a href="adobedl.html" id="nav-adobe" class="sidebar-link"><li class="sidebar-item">🎨 หมวดหมู่ Adobe</li></a>
-            <a href="gamesdl.html" id="nav-games" class="sidebar-link active"><li class="sidebar-item">🎮 หมวดหมู่ Games</li></a>
+            <a href="gamesdl.html" id="nav-games" class="sidebar-link"><li class="sidebar-item">🎮 หมวดหมู่ Games</li></a>
             <a href="etcdl.html" id="nav-etc" class="sidebar-link"><li class="sidebar-item">📂 หมวดหมู่ ETC.</li></a>
         </ul>
         <div class="sidebar-footer">
@@ -86,32 +91,35 @@
             <p>ระบบคลังดาวน์โหลดโปรแกรมและจัดการข้อมูลรวมศูนย์ของคุณ</p>
         </header>
 
-        <div class="shortcut-grid" id="dataGrid">
-            </div>
+        <div class="shortcut-grid" id="dataGrid"></div>
     </main>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, query, where, getDocs, doc, deleteDoc, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // 🔥 เอา Firebase Config ของคุณมาวางตรงนี้ให้ถูกต้องเหมือนหน้าแรก
         const firebaseConfig = {
-  apiKey: "AIzaSyB-v9u49UfZ0CBt8bYQoFMCB6QuqLxspZk",
-  authDomain: "download-hub-e940e.firebaseapp.com",
-  databaseURL: "https://download-hub-e940e-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "download-hub-e940e",
-  storageBucket: "download-hub-e940e.firebasestorage.app",
-  messagingSenderId: "950263847548",
-  appId: "1:950263847548:web:390c5d2932aac312bb87f9",
-  measurementId: "G-46FQ8MGH9B"
-};
+            apiKey: "AIzaSyB-v9u49UfZ0CBt8bYQoFMCB6QuqLxspZk",
+            authDomain: "download-hub-e940e.firebaseapp.com",
+            databaseURL: "https://download-hub-e940e-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "download-hub-e940e",
+            storageBucket: "download-hub-e940e.firebasestorage.app",
+            messagingSenderId: "950263847548",
+            appId: "1:950263847548:web:390c5d2932aac312bb87f9",
+            measurementId: "G-46FQ8MGH9B"
+        };
+
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // 💡 จุดที่ 2: ระบุหมวดหมู่ของหน้านั้นๆ ('adobe', 'games', หรือ 'etc')
+        // 💡 หมายเหตุ: ถ้าน้าเอาไปวางในหน้าอื่น อย่าลืมเปลี่ยนชื่อค่าตรงนี้ให้ตรงหมวดหมู่ตัวเล็กนะ ('adobe' / 'games' / 'etc')[cite: 2, 4, 5]
         const currentCategory = 'games'; 
 
-        // 🌟 ฟังก์ชันดึงข้อมูลมาแสดงผล (Dynamic Render)
+        // จัดไฟส่องตามเมนูด้านข้างอัตโนมัติ
+        document.querySelectorAll('.sidebar-link').forEach(el => el.classList.remove('active'));
+        const activeNav = document.getElementById(`nav-${currentCategory}`);
+        if(activeNav) activeNav.classList.add('active');
+
         async function renderItems() {
             const grid = document.getElementById('dataGrid');
             if (!grid) return;
@@ -146,7 +154,14 @@
                                 </div>
                             </div>
                             <a href="${item.downloadUrl}" target="_blank" class="btn-link">${item.btnText}</a>
-                            ${isLatestAdmin ? `<button class="btn-delete" onclick="deleteItem('${docId}')">🗑️ ลบรายการนี้</button>` : ''}
+                            
+                            <!-- เพิ่มแผงปุ่มสำหรับแอดมินเพื่อเรียกกระบวนการ แก้ไข และลบข้อมูล -->
+                            ${isLatestAdmin ? `
+                            <div class="admin-action-row">
+                                <button class="btn-edit" onclick="editItem('${docId}')">✏️ แก้ไข</button>
+                                <button class="btn-delete" onclick="deleteItem('${docId}')">🗑️ ลบรายการ</button>
+                            </div>
+                            ` : ''}
                         </div>
                     `;
                 });
@@ -158,21 +173,46 @@
             }
         }
 
-        // 🌟 ผูกฟังก์ชันเข้ากับ window เพื่อให้ HTML ฝั่งปุ่มกดสามารถมองเห็นและเรียกใช้ได้
         window.toggleCard = function(headerElement) {
             headerElement.closest('.shortcut-card').classList.toggle('active');
         }
 
+        // ฟังก์ชันเมื่อแอดมินกดคลิกปุ่มแก้ไข (Edit) ส่งข้อมูล ID ไปที่ฟอร์มหลังบ้าน
+        window.editItem = function(id) {
+            window.location.href = `admin.html?edit=${id}`;
+        }
+
+        // เปลี่ยนกระบวนการยืนยันการลบแบบ SweetAlert2 หรูหราสุดใจตามใจน้าเลยครับ!
         window.deleteItem = async function(id) {
-            if (confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้ออกจาก Firebase?')) {
-                try {
-                    await deleteDoc(doc(db, "portalItems", id));
-                    alert('ลบรายการสำเร็จแล้วครับ!');
-                    renderItems();
-                } catch (error) {
-                    alert('ไม่สามารถลบข้อมูลได้: ' + error.message);
+            Swal.fire({
+                title: 'ยืนยันการลบข้อมูล?',
+                text: "น้าแน่ใจใช่ไหมที่จะลบรายการนี้ออกจากระบบ ข้อมูลจะหายถาวรเลยนะ!",
+                icon: 'warning',
+                showCancelButton: true,
+                background: '#111',
+                color: '#fff',
+                confirmButtonColor: '#ff4d4d',
+                cancelButtonColor: '#444',
+                confirmButtonText: '💥 ใช่, ลบเลย!',
+                cancelButtonText: 'ยกเลิก'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        await deleteDoc(doc(db, "portalItems", id));
+                        Swal.fire({
+                            title: 'ลบเสร็จสิ้น!',
+                            text: 'รายการข้อมูลโดนกวาดล้างออกจาก Firebase แล้วครับ',
+                            icon: 'success',
+                            background: '#111',
+                            color: '#fff',
+                            confirmButtonColor: '#d4af37'
+                        });
+                        renderItems();
+                    } catch (error) {
+                        Swal.fire({ icon: 'error', title: 'ลบไม่สำเร็จ', text: error.message, background: '#111', color: '#fff' });
+                    }
                 }
-            }
+            });
         }
 
         window.toggleTheme = function() {
@@ -188,12 +228,8 @@
             }
         }
 
-        window.logout = function() { 
-            sessionStorage.clear(); 
-            window.location.href = 'index.html'; 
-        }
+        window.logout = function() { sessionStorage.clear(); window.location.href = 'index.html'; }
 
-        // ⚙️ ตรวจสอบสิทธิ์แอดมิน เพื่อแสดงลิ้งก์ไปหน้าแอดมินบนเมนูด้านข้าง
         if (sessionStorage.getItem('role') === 'admin') {
             const sidebarMenu = document.querySelector('.sidebar-menu');
             if (sidebarMenu) {
@@ -205,7 +241,6 @@
             }
         }
 
-        // เรียกใช้งานฟังก์ชันดึงข้อมูลทันทีเมื่อโหลดหน้าเว็บสำเร็จ
         document.addEventListener('DOMContentLoaded', renderItems);
     </script>
 </body>
