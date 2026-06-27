@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel | Workspace Portal</title>
-    <!-- เพิ่มสคริปต์ SweetAlert2 สำหรับหน้าต่างป๊อปอัพสุดแจ่ม -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         if (sessionStorage.getItem('isLoggedIn') !== 'true' || sessionStorage.getItem('role') !== 'admin') {
@@ -37,9 +36,8 @@
         <h1 id="panelTitle">⚙️ CONTROL & UPLOAD PANEL</h1>
         
         <form onsubmit="saveDataToFirebase(event)">
-            <!-- ซ่อน ID สำหรับการกดแก้ไขข้อมูลไว้ -->
             <input type="hidden" id="editDocId" value="">
-            <input type="hidden" id="existingImgUrl" value="">
+            <input type="hidden" id="existingImgBase64" value="">
 
             <div class="form-row">
                 <div class="form-group">
@@ -79,11 +77,10 @@
             </div>
 
             <div class="form-group full">
-                <label>เลือกไฟล์รูปภาพพรีวิวหน้าปก (อัปโหลดตรงจากเครื่อง)</label>
-                <!-- ปรับให้รองรับไฟล์รูปตรงๆ ไม่ต้องใช้ ลิงก์ URL -->
-                <input type="file" id="imgFile" accept="image/*" onchange="previewImage(event)">
+                <label>เลือกไฟล์รูปภาพพรีวิวหน้าปก (ดึงตรงจากคอม/มือถือ)</label>
+                <input type="file" id="imgFile" accept="image/*" onchange="previewAndConvertImage(event)">
                 <div class="preview-box" id="previewContainer">
-                    <p style="font-size: 0.8rem; color:#aaa; margin: 5px 0;">รูปภาพที่จะถูกเปิดแสดง:</p>
+                    <p style="font-size: 0.8rem; color:#aaa; margin: 5px 0;">รูปภาพพรีวิวที่จะแสดงบนหน้าเว็บ:</p>
                     <img id="imageRender" src="" alt="Preview">
                 </div>
             </div>
@@ -107,14 +104,12 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyB-v9u49UfZ0CBt8bYQoFMCB6QuqLxspZk",
             authDomain: "download-hub-e940e.firebaseapp.com",
             databaseURL: "https://download-hub-e940e-default-rtdb.asia-southeast1.firebasedatabase.app",
             projectId: "download-hub-e940e",
-            storageBucket: "download-hub-e940e.firebasestorage.app",
             messagingSenderId: "950263847548",
             appId: "1:950263847548:web:390c5d2932aac312bb87f9",
             measurementId: "G-46FQ8MGH9B"
@@ -122,22 +117,30 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        const storage = getStorage(app); // สตาร์ทระบบ Storage สำหรับเก็บไฟล์ภาพ
 
-        // ฟังก์ชัน Render รูปภาพก่อนการอัปโหลดจริง
-        window.previewImage = function(event) {
+        let globalBase64Str = ""; // ตัวแปรเก็บรหัสข้อความรูปภาพ
+
+        // ฟังก์ชันอ่านไฟล์รูปจากคอมแล้วแปลงเป็นข้อความ Base64 ทันที โดยไม่ต้องอัปโหลดเข้า Storage
+        window.previewAndConvertImage = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // 💡 แนะนำให้ใช้รูปขนาดไม่ใหญ่จนเกินไป (แนะนำต่ำกว่า 1MB-2MB) เพื่อป้องกันฐานข้อมูลเต็มครับน้า
+            if (file.size > 2 * 1024 * 1024) {
+                Swal.fire({ icon: 'warning', title: 'ไฟล์มีขนาดใหญ่เกินไป', text: 'แนะนำให้ใช้รูปพรีวิวขนาดไม่เกิน 2MB เพื่อความรวดเร็วในการโหลดหน้าเว็บครับน้า', background: '#111', color: '#fff', confirmButtonColor: '#d4af37' });
+            }
+
             const reader = new FileReader();
             reader.onload = function() {
+                globalBase64Str = reader.result; // ได้ข้อความภาพรหัส Base64
                 const output = document.getElementById('imageRender');
-                output.src = reader.result;
+                output.src = globalBase64Str;
                 document.getElementById('previewContainer').style.display = 'block';
             };
-            if(event.target.files[0]) {
-                reader.readAsDataURL(event.target.files[0]);
-            }
+            reader.readAsDataURL(file);
         }
 
-        // เช็กสิทธิ์แอดมินกรณีส่งข้อมูล Edit ข้ามมาจากหน้าแสดงผล
+        // โหลดข้อมูลเก่ามาแสดงในกรณีที่กด Edit ข้ามมาจากหน้าแสดงผล
         document.addEventListener('DOMContentLoaded', async () => {
             const urlParams = new URLSearchParams(window.location.search);
             const editId = urlParams.get('edit');
@@ -148,7 +151,6 @@
                 document.getElementById('btnSubmit').innerText = '💾 อัปเดตการแก้ไขข้อมูล';
                 document.getElementById('editBanner').style.display = 'block';
                 
-                // ดึงข้อมูลอันเก่าใน Firebase มารอแสดงบนช่องกรอกข้อมูล
                 try {
                     const docRef = doc(db, "portalItems", editId);
                     const docSnap = await getDoc(docRef);
@@ -161,93 +163,71 @@
                         document.getElementById('accountInfo').value = item.accountInfo || '';
                         document.getElementById('downloadUrl').value = item.downloadUrl;
                         document.getElementById('btnText').value = item.btnText;
-                        document.getElementById('existingImgUrl').value = item.imgUrl;
+                        document.getElementById('existingImgBase64').value = item.imgUrl || '';
                         
                         if(item.imgUrl) {
                             document.getElementById('imageRender').src = item.imgUrl;
                             document.getElementById('previewContainer').style.display = 'block';
+                            globalBase64Str = item.imgUrl; // จำภาพเก่าไว้ถ้าแอดมินไม่ได้เปลี่ยนรูปใหม่
                         }
                     }
                 } catch (e) {
-                    Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: 'ดึงข้อมูลเดิมไม่สำเร็จ: ' + e.message, background: '#111', color: '#fff', confirmButtonColor: '#d4af37' });
+                    Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: 'ดึงข้อมูลเดิมไม่สำเร็จ: ' + e.message, background: '#111', color: '#fff' });
                 }
             }
         });
 
-        // จัดการและรวมคำสั่งบันทึก / อัปเดตข้อมูลขึ้นระบบคลาวด์
+        // ฟังก์ชันกดปุ่มเซฟ/อัปเดตข้อมูล
         window.saveDataToFirebase = async function(e) {
             e.preventDefault();
             
-            // เปิดหน้าต่างแจ้งเตือนกำลังโหลดแบบหรูหราห้ามคลิกปิด
+            const editId = document.getElementById('editDocId').value;
+            const existingImg = document.getElementById('existingImgBase64').value;
+            const finalImgUrl = globalBase64Str || existingImg;
+
+            if (!finalImgUrl) {
+                Swal.fire({ icon: 'warning', title: 'แจ้งเตือน', text: 'กรุณาเลือกอัปโหลดรูปภาพจากในเครื่องก่อนครับน้า', background: '#111', color: '#fff', confirmButtonColor: '#d4af37' });
+                return;
+            }
+
             Swal.fire({
                 title: 'กำลังบันทึกข้อมูล...',
-                text: 'กรุณารอสักครู่ ระบบกำลังอัปโหลดข้อมูลภาพและข้อความขึ้นระบบ',
                 background: '#111',
                 color: '#fff',
                 allowOutsideClick: false,
                 didOpen: () => { Swal.showLoading(); }
             });
 
-            const fileInput = document.getElementById('imgFile');
-            const editId = document.getElementById('editDocId').value;
-            let finalImgUrl = document.getElementById('existingImgUrl').value;
-
             try {
-                // กรณีผู้ใช้เลือกไฟล์ภาพใหม่เข้ามาตรงๆ
-                if (fileInput.files.length > 0) {
-                    const file = fileInput.files[0];
-                    const storageRef = ref(storage, 'portal_images/' + Date.now() + '_' + file.name);
-                    const snapshot = await uploadBytes(storageRef, file);
-                    finalImgUrl = await getDownloadURL(snapshot.ref);
-                } else if (!editId && fileInput.files.length === 0) {
-                    // หากเป็นการเพิ่มใหม่ แต่ลืมเลือกภาพ
-                    Swal.fire({ icon: 'warning', title: 'แจ้งเตือน', text: 'กรุณาอัปโหลดรูปภาพตัวอย่างหน้าปกก่อนครับ', background: '#111', color: '#fff', confirmButtonColor: '#d4af37' });
-                    return;
-                }
-
                 const portalData = {
                     category: document.getElementById('category').value,
                     title: document.getElementById('title').value.trim(),
                     dotClass: document.getElementById('dotClass').value,
                     details: document.getElementById('details').value.trim(),
                     accountInfo: document.getElementById('accountInfo').value.trim(),
-                    imgUrl: finalImgUrl,
+                    imgUrl: finalImgUrl, // เก็บเป็นข้อความยาวของ Base64
                     downloadUrl: document.getElementById('downloadUrl').value.trim(),
                     btnText: document.getElementById('btnText').value.trim()
                 };
 
                 if (editId) {
-                    // โหมดแก้ไข: ปรับปรุงโครงสร้างข้อมูลชุดเดิม
+                    // ทำการอัปเดตข้อมูลการ์ดใบเดิม
                     await updateDoc(doc(db, "portalItems", editId), portalData);
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'อัปเดตสำเร็จ! 🎉',
-                        text: 'แก้ไขข้อมูลลงระบบคลาวด์เรียบร้อยแล้ว',
-                        background: '#111',
-                        color: '#fff',
-                        confirmButtonColor: '#d4af37'
-                    }).then(() => {
-                        window.location.href = 'dashboard.html';
-                    });
+                    Swal.fire({ icon: 'success', title: 'อัปเดตสำเร็จ! 🎉', text: 'แก้ไขข้อมูลบนคลาวด์เรียบร้อยแล้วครับ', background: '#111', color: '#fff', confirmButtonColor: '#d4af37' })
+                    .then(() => { window.location.href = 'dashboard.html'; });
                 } else {
-                    // โหมดเพิ่มใหม่: แอดข้อมูลลงคลังข้อมูลใบใหม่
+                    // ทำการเพิ่มข้อมูลการ์ดใบใหม่
                     portalData.createdAt = Date.now();
                     await addDoc(collection(db, "portalItems"), portalData);
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'อัปโหลดสำเร็จ! 🚀',
-                        text: 'นำข้อมูลใหม่ขึ้น Firebase Server เรียบร้อยแล้ว',
-                        background: '#111',
-                        color: '#fff',
-                        confirmButtonColor: '#d4af37'
-                    });
+                    Swal.fire({ icon: 'success', title: 'อัปโหลดสำเร็จ! 🚀', text: 'เพิ่มข้อมูลการ์ดใบใหม่ลงระบบคลาวด์เรียบร้อยครับ!', background: '#111', color: '#fff', confirmButtonColor: '#d4af37' });
                     e.target.reset();
+                    globalBase64Str = "";
                     document.getElementById('previewContainer').style.display = 'none';
                 }
                 
             } catch (error) {
-                console.error("Firebase Process Error: ", error);
-                Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: error.message, background: '#111', color: '#fff', confirmButtonColor: '#d4af37' });
+                console.error("Database Error: ", error);
+                Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: error.message, background: '#111', color: '#fff' });
             }
         }
     </script>
